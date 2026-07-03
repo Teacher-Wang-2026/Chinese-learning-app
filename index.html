@@ -738,6 +738,7 @@ function showAudioPlayer(audioElement, containerId) {
 
 function speak(text, btnElement) {
   if (!text) return;
+  alert('开始播放: ' + text);
 
   // 先用 alert 确认按钮触发（调试用，确认正常后删除）
   // alert('正在加载语音: ' + text);
@@ -1555,10 +1556,15 @@ function showToast(msg) {
 
 // ==================== 初始化 ====================
 window.onload = function() {
-  initLessons();
-  renderLessonSelectors();
-  updateStats();
-  initCanvas();
+  alert('页面加载成功！如果是第一次看到此弹窗，说明已加载最新版本。');
+  try {
+    initLessons();
+    renderLessonSelectors();
+    updateStats();
+    initCanvas();
+  } catch(e) {
+    alert('初始化错误: ' + e.message);
+  }
 };
 </script>
 </body>
