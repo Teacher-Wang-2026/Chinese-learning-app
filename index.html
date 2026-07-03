@@ -707,53 +707,77 @@ function getCurrentLesson() {
   return lessons.find(l => l.id === currentLessonId);
 }
 
-// ==================== 语音功能（多源TTS） ====================
-// 使用隐藏audio元素播放，兼容所有手机浏览器
+// ==================== 语音功能（fetch+blob 方案） ====================
+// 先下载音频转成blob URL再播放，绕过跨域限制
 
-// 创建可见的audio元素（华为浏览器需要可见控件才能播放）
-let ttsAudio = null;
-function getTtsAudio() {
-  if (!ttsAudio) {
-    ttsAudio = document.createElement('audio');
-    ttsAudio.controls = true;
-    ttsAudio.style.cssText = 'display:none;width:100%;margin-top:8px;border-radius:8px;';
-    document.body.appendChild(ttsAudio);
-  }
-  return ttsAudio;
-}
-
-// 显示音频播放器（在按钮下方）
-function showAudioPlayer(audioElement, containerId) {
-  let container = document.getElementById(containerId);
-  if (!container) {
-    container = document.createElement('div');
-    container.id = containerId;
-    container.style.cssText = 'margin-top:8px;';
-    audioElement.parentNode.insertBefore(container, audioElement.nextSibling);
-  }
-  container.innerHTML = '';
-  container.appendChild(audioElement);
-  audioElement.style.display = 'block';
-}
+let currentAudio = null;
 
 function speak(text, btnElement) {
   if (!text) return;
 
-  const encoded = encodeURIComponent(text);
-
-  // 方案：直接在新窗口打开音频链接，浏览器自带播放器播放
-  // 这样不涉及跨域限制，华为浏览器也能播放
-  const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
-
-  // 显示加载提示
-  if (btnElement) {
-    const originalText = btnElement.textContent;
-    btnElement.textContent = '⏳ 加载中...';
-    setTimeout(function() { btnElement.textContent = originalText; }, 2000);
+  // 停止之前的播放
+  if (currentAudio) {
+    try { currentAudio.pause(); } catch(e) {}
+    currentAudio = null;
   }
 
-  // 直接在新标签页打开音频，浏览器会自动播放
-  window.open(baiduUrl, '_blank');
+  const encoded = encodeURIComponent(text);
+
+  // 多个TTS源，按优先级尝试
+  const ttsUrls = [
+    `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`,
+    `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`,
+  ];
+
+  // 显示加载提示
+  let originalText = '';
+  if (btnElement) {
+    originalText = btnElement.textContent;
+    btnElement.textContent = '⏳ 加载中...';
+  }
+
+  let urlIndex = 0;
+
+  function tryLoad(url) {
+    fetch(url)
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.blob();
+      })
+      .then(function(blob) {
+        const blobUrl = URL.createObjectURL(blob);
+        currentAudio = new Audio(blobUrl);
+        currentAudio.onended = function() {
+          URL.revokeObjectURL(blobUrl);
+          if (btnElement) btnElement.textContent = originalText;
+        };
+        currentAudio.onerror = function() {
+          URL.revokeObjectURL(blobUrl);
+          tryNext();
+        };
+        currentAudio.play().catch(function(e) {
+          console.warn('播放失败:', e);
+          tryNext();
+        });
+        if (btnElement) btnElement.textContent = originalText;
+      })
+      .catch(function(e) {
+        console.warn('下载失败:', e);
+        tryNext();
+      });
+  }
+
+  function tryNext() {
+    urlIndex++;
+    if (urlIndex < ttsUrls.length) {
+      tryLoad(ttsUrls[urlIndex]);
+    } else {
+      if (btnElement) btnElement.textContent = originalText;
+      speakNative(text);
+    }
+  }
+
+  tryLoad(ttsUrls[0]);
 }
 
 // 浏览器内置语音（最后备选）
@@ -769,12 +793,12 @@ function speakNative(text) {
     u.rate = 0.75;
     speechSynthesis.speak(u);
   } catch(e) {
-    showToast('⚠️ 语音播放失败，请检查网络');
+    showToast('⚠️ 语音播放失败');
   }
 }
 
 function stopSpeak() {
-  if (ttsAudio) { try { ttsAudio.pause(); } catch(e) {} }
+  if (currentAudio) { try { currentAudio.pause(); } catch(e) {} }
   if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch(e) {} }
 }
 
