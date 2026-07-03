@@ -174,7 +174,7 @@ body {
   align-items: center;
   margin-bottom: 20px;
 }
-.stroke-char { font-size: 96px; color: var(--primary); line-height: 1.1; font-weight: 400; }
+.stroke-char { font-size: 72px; color: var(--primary); line-height: 1.1; font-weight: 400; word-break: break-all; text-align: center; max-width: 100%; }
 .stroke-pinyin { font-size: 18px; color: var(--text-light); margin-top: 4px; }
 .stroke-meaning { font-size: 16px; color: var(--text-light); margin-top: 2px; }
 
@@ -792,6 +792,7 @@ let quizIdx = 0;
 let quizScore = 0;
 let quizTotal = 0;
 let writeIdx = 0;
+let currentWriteWord = null;
 let mcIdx = 0;
 let spellIdx = 0;
 let todayReviewed = 0;
@@ -989,12 +990,13 @@ function initWrite() {
 function updateWriteChar() {
   const w = wordBank[writeIdx];
   if (!w) return;
-  // 取第一个字作为书写演示
-  const singleChar = w.char.length > 0 ? w.char[0] : w.char;
-  document.getElementById('writeDemoChar').textContent = singleChar;
+  // 显示完整词组
+  document.getElementById('writeDemoChar').textContent = w.char;
   document.getElementById('writeDemoPinyin').textContent = w.pinyin;
   document.getElementById('writeDemoMeaning').textContent = w.meaning;
   document.getElementById('strokeOrderInfo').style.display = 'none';
+  // 更新笔顺提示，显示每个字的笔顺
+  currentWriteWord = w;
 }
 function changeWriteChar(dir) {
   writeIdx += dir;
@@ -1007,9 +1009,14 @@ function changeWriteChar(dir) {
 function showStrokeOrder() {
   const w = wordBank[writeIdx];
   if (!w) return;
-  const singleChar = w.char.length > 0 ? w.char[0] : w.char;
-  const order = strokeOrders[singleChar] || '该字的笔顺数据暂未收录，请参考教科书。';
-  document.getElementById('strokeOrderText').textContent = `「${singleChar}」的笔顺：${order}`;
+  // 显示词组中每个字的笔顺
+  let orders = [];
+  for (let i = 0; i < w.char.length; i++) {
+    const c = w.char[i];
+    const order = strokeOrders[c] || '笔顺数据暂未收录';
+    orders.push(`「${c}」：${order}`);
+  }
+  document.getElementById('strokeOrderText').innerHTML = `「${w.char}」的笔顺：<br>${orders.join('<br>')}`;
   document.getElementById('strokeOrderInfo').style.display = 'block';
 }
 function renderCharList() {
@@ -1066,8 +1073,30 @@ function checkWriting() {
   const w = wordBank[writeIdx];
   const res = document.getElementById('writeResult');
   res.style.display = 'block';
-  res.innerHTML = `继续练习「${w.char}」吧！注意笔顺哦。<br>💡 点击「笔顺提示」查看正确笔顺。`;
-  res.style.color = 'var(--primary)';
+
+  // 检测画板上是否有内容（通过统计非透明像素）
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let pixelCount = 0;
+  for (let i = 3; i < imgData.data.length; i += 4) {
+    if (imgData.data[i] > 0) { pixelCount++; }
+  }
+
+  if (pixelCount < 100) {
+    // 画板基本是空的
+    res.innerHTML = `✏️ 还没写字哦！请在田字格里练习写「${w.char}」<br>💡 点击「笔顺提示」查看正确笔顺。`;
+    res.style.color = 'var(--accent)';
+  } else {
+    // 有写字，给出鼓励反馈
+    const tips = [
+      `👍 不错！继续练习「${w.char}」！`,
+      `✅ 写得很好！再写一遍「${w.char}」试试！`,
+      `💪 很棒！注意笔顺哦，点击「笔顺提示」对照一下。`,
+      `🌟 继续加油！「${w.char}」一共 ${w.char.length} 个字，都要练习。`
+    ];
+    const tip = tips[Math.floor(Math.random() * tips.length)];
+    res.innerHTML = `${tip}<br>💡 写完后点「清除」可以重新练习。`;
+    res.style.color = '#27AE60';
+  }
 }
 
 // ==================== 语法练习 ====================
