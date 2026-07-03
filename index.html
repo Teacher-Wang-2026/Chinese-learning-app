@@ -1386,7 +1386,19 @@ function importWords() {
     line = line.trim();
     if (!line) return;
     // 同时支持英文逗号、中文逗号、制表符、分号作为分隔符
-    const parts = line.split(/[,，\t;；]/).map(s => s.trim());
+    let parts = line.split(/[,，\t;；]/).map(s => s.trim());
+    // 自动跳过行首的数字序号（如 "1就" 或 "1. 就" 或 "1、就"）
+    if (parts.length > 0) {
+      // 情况1：第一段是纯数字（如 "1" "10"），直接去掉
+      if (/^\d+$/.test(parts[0])) {
+        parts.shift();
+      }
+      // 情况2：第一段以数字开头，后面紧跟汉字（如 "1就" "10旅游"）
+      else if (/^\d+[\.\、]?\s*.+/.test(parts[0])) {
+        parts[0] = parts[0].replace(/^\d+[\.\、]?\s*/, '');
+        if (!parts[0]) parts.shift();
+      }
+    }
     if (parts[0] && parts[1] && parts[2]) {
       lesson.words.push({ char: parts[0], pinyin: parts[1], meaning: parts[2], example: parts[3] || '' });
       count++;
