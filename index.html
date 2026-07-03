@@ -370,13 +370,13 @@ body {
           <div class="flashcard-face flashcard-front">
             <div class="flashcard-char" id="fcChar">中</div>
             <div class="flashcard-pinyin" id="fcPinyin">zhōng</div>
-            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcard(this)" title="点击发音">🔊</button>
+            <button class="speak-btn" onclick="speakFlashcard(this)" title="点击发音">🔊</button>
             <div class="flashcard-hint">点击翻转查看答案</div>
           </div>
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning" id="fcMeaning">中间、中国</div>
             <div class="flashcard-example" id="fcExample">我在中国的大学学习中文。</div>
-            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcardExample(this)" title="朗读例句">🔊 例句</button>
+            <button class="speak-btn" onclick="speakFlashcardExample(this)" title="朗读例句">🔊 例句</button>
             <div class="flashcard-hint">你记住了吗？</div>
           </div>
         </div>
@@ -850,7 +850,9 @@ function stopSpeak() {
 
 function speakWord(text, btn) { speak(text, btn); }
 function speakFlashcard(btn) {
+  alert('speakFlashcard被调用');
   const w = reviewList[reviewIdx];
+  alert('词汇: ' + (w ? w.char : '无'));
   if (w) speak(w.char, btn);
 }
 function speakFlashcardExample(btn) {
