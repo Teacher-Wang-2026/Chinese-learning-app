@@ -507,8 +507,8 @@ body {
 
     <div class="card">
       <div class="card-title">📥 批量导入词汇到当前课</div>
-      <textarea class="import-area" id="importArea" placeholder="每行一个词，格式：汉字,拼音,释义,例句（选填）&#10;例如：&#10;中国,zhōng guó,中国、中间,我在中国学习。&#10;学习,xué xí,study,我要学习中文。"></textarea>
-      <div class="import-hint">💡 格式：汉字,拼音,释义,例句（可选）。导入到当前选中的课程。</div>
+      <textarea class="import-area" id="importArea" placeholder="每行一个词，用逗号分隔&#10;格式：汉字,拼音,释义,例句（例句可选）&#10;&#10;例子：&#10;中国,zhōng guó,China,我在中国学习。&#10;学习,xué xí,study,我要学习中文。&#10;学生,xué sheng,student"></textarea>
+      <div class="import-hint">💡 每行一个词，用英文逗号或中文逗号分隔。前三项（汉字、拼音、释义）必填，例句可选。导入到当前选中的课程。</div>
       <button class="add-word-btn" onclick="importWords()" style="border-radius:10px;">导入词汇</button>
     </div>
 
@@ -1376,16 +1376,22 @@ function deleteWord(i) {
 }
 function importWords() {
   const text = document.getElementById('importArea').value.trim();
-  if (!text) return;
+  if (!text) { showToast('⚠️ 请先输入要导入的词汇'); return; }
   const lesson = getCurrentLesson();
   if (!lesson) { showToast('请先创建课程'); return; }
   const lines = text.split('\n');
   let count = 0;
+  let failCount = 0;
   lines.forEach(line => {
-    const parts = line.split(',').map(s => s.trim());
+    line = line.trim();
+    if (!line) return;
+    // 同时支持英文逗号、中文逗号、制表符、分号作为分隔符
+    const parts = line.split(/[,，\t;；]/).map(s => s.trim());
     if (parts[0] && parts[1] && parts[2]) {
       lesson.words.push({ char: parts[0], pinyin: parts[1], meaning: parts[2], example: parts[3] || '' });
       count++;
+    } else {
+      failCount++;
     }
   });
   refreshWordBank();
@@ -1393,7 +1399,13 @@ function importWords() {
   renderWordTable();
   renderLessonSelectors();
   saveData();
-  showToast(`✅ 成功导入 ${count} 个词汇到${lesson.name}！`);
+  if (count > 0) {
+    let msg = `✅ 成功导入 ${count} 个词汇到${lesson.name}！`;
+    if (failCount > 0) msg += `\n⚠️ ${failCount} 行格式不对，已跳过`;
+    showToast(msg);
+  } else {
+    showToast('❌ 导入失败！请检查格式：汉字,拼音,释义（用逗号分隔）');
+  }
 }
 function exportWords() {
   const text = wordBank.map(w => `${w.char},${w.pinyin},${w.meaning}${w.example ? ',' + w.example : ''}`).join('\n');
