@@ -738,92 +738,22 @@ function showAudioPlayer(audioElement, containerId) {
 
 function speak(text, btnElement) {
   if (!text) return;
-  alert('开始播放: ' + text);
 
-  // 先用 alert 确认按钮触发（调试用，确认正常后删除）
-  // alert('正在加载语音: ' + text);
-
-  const audio = getTtsAudio();
-
-  // 停止当前播放
-  audio.pause();
-  audio.currentTime = 0;
-
-  // 编码文本
   const encoded = encodeURIComponent(text);
 
-  // 百度翻译 TTS（主）+ Google TTS（备）
+  // 方案：直接在新窗口打开音频链接，浏览器自带播放器播放
+  // 这样不涉及跨域限制，华为浏览器也能播放
   const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
-  const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
   // 显示加载提示
   if (btnElement) {
     const originalText = btnElement.textContent;
     btnElement.textContent = '⏳ 加载中...';
-    audio.onplay = function() {
-      btnElement.textContent = originalText;
-    };
-    audio.onerror = function() {
-      btnElement.textContent = originalText;
-    };
+    setTimeout(function() { btnElement.textContent = originalText; }, 2000);
   }
 
-  // 先尝试百度
-  let triedGoogle = false;
-  let triedNative = false;
-
-  audio.onerror = function() {
-    if (!triedGoogle) {
-      triedGoogle = true;
-      audio.src = googleUrl;
-      audio.load();
-      audio.play().catch(function() {
-        if (!triedNative) { triedNative = true; speakNative(text); }
-      });
-    } else if (!triedNative) {
-      triedNative = true;
-      speakNative(text);
-    }
-  };
-
-  // 设置源并播放
-  audio.src = baiduUrl;
-  audio.load();
-
-  const playPromise = audio.play();
-  if (playPromise) {
-    playPromise.catch(function(e) {
-      console.warn('百度TTS播放失败，尝试Google:', e);
-      if (!triedGoogle) {
-        triedGoogle = true;
-        audio.src = googleUrl;
-        audio.load();
-        audio.play().catch(function() {
-          if (!triedNative) { triedNative = true; speakNative(text); }
-        });
-      } else if (!triedNative) {
-        triedNative = true;
-        speakNative(text);
-      }
-    });
-  }
-
-  // 如果按钮元素存在，在按钮下方显示播放器
-  if (btnElement) {
-    const wrapper = btnElement.parentElement;
-    // 找到或创建播放器容器
-    let playerDiv = wrapper.querySelector('.audio-player-div');
-    if (!playerDiv) {
-      playerDiv = document.createElement('div');
-      playerDiv.className = 'audio-player-div';
-      playerDiv.style.cssText = 'margin-top:8px;';
-      wrapper.appendChild(playerDiv);
-    }
-    // 移动audio元素到容器中
-    playerDiv.innerHTML = '';
-    playerDiv.appendChild(audio);
-    audio.style.display = 'block';
-  }
+  // 直接在新标签页打开音频，浏览器会自动播放
+  window.open(baiduUrl, '_blank');
 }
 
 // 浏览器内置语音（最后备选）
@@ -850,9 +780,7 @@ function stopSpeak() {
 
 function speakWord(text, btn) { speak(text, btn); }
 function speakFlashcard(btn) {
-  alert('speakFlashcard被调用');
   const w = reviewList[reviewIdx];
-  alert('词汇: ' + (w ? w.char : '无'));
   if (w) speak(w.char, btn);
 }
 function speakFlashcardExample(btn) {
@@ -1558,15 +1486,10 @@ function showToast(msg) {
 
 // ==================== 初始化 ====================
 window.onload = function() {
-  alert('页面加载成功！如果是第一次看到此弹窗，说明已加载最新版本。');
-  try {
-    initLessons();
-    renderLessonSelectors();
-    updateStats();
-    initCanvas();
-  } catch(e) {
-    alert('初始化错误: ' + e.message);
-  }
+  initLessons();
+  renderLessonSelectors();
+  updateStats();
+  initCanvas();
 };
 </script>
 </body>
