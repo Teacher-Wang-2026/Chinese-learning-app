@@ -707,83 +707,94 @@ function getCurrentLesson() {
   return lessons.find(l => l.id === currentLessonId);
 }
 
-// ==================== 语音功能（在线TTS + 浏览器内置双方案） ====================
-// 华为鸿蒙等手机浏览器内置语音可能不支持，使用在线TTS作为主要方案
+// ==================== 语音功能（多源TTS） ====================
+// 使用隐藏audio元素播放，兼容所有手机浏览器
 
-let currentAudio = null;  // 当前播放的音频对象
+// 创建隐藏的audio元素
+let ttsAudio = null;
+function getTtsAudio() {
+  if (!ttsAudio) {
+    ttsAudio = document.createElement('audio');
+    ttsAudio.style.display = 'none';
+    document.body.appendChild(ttsAudio);
+  }
+  return ttsAudio;
+}
 
 function speak(text) {
   if (!text) return;
 
-  // 停止之前的播放
-  stopSpeak();
+  const audio = getTtsAudio();
 
-  // 方案1：使用在线 TTS（百度/Google），兼容所有手机浏览器
-  // 百度 TTS（国内速度快），Google TTS（国际备用）
+  // 停止当前播放
+  audio.pause();
+  audio.currentTime = 0;
+
+  // 编码文本
   const encoded = encodeURIComponent(text);
-  // 优先用 Google TTS（在埃塞能访问）
-  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
-  try {
-    currentAudio = new Audio(ttsUrl);
-    currentAudio.crossOrigin = 'anonymous';
+  // 尝试多个 TTS 源（百度翻译 TTS + Google TTS）
+  // 百度翻译 TTS（国内速度快，华为手机友好）
+  const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
+  // Google TTS（国际备用）
+  const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
-    // 播放成功
-    currentAudio.oncanplay = function() {
-      currentAudio.play().catch(function(e) {
-        console.warn('播放失败，尝试方案2:', e);
-        speakFallback(text);
+  // 先尝试百度
+  audio.src = baiduUrl;
+  audio.load();
+
+  // 如果百度失败，尝试 Google
+  let triedGoogle = false;
+  audio.onerror = function() {
+    if (!triedGoogle) {
+      triedGoogle = true;
+      audio.src = googleUrl;
+      audio.load();
+      audio.play().catch(function(e) {
+        console.warn('Google TTS 也失败:', e);
+        // 最后尝试浏览器内置语音
+        speakNative(text);
       });
-    };
+    } else {
+      speakNative(text);
+    }
+  };
 
-    // 播放失败，回退到浏览器内置语音
-    currentAudio.onerror = function() {
-      console.warn('在线TTS失败，尝试浏览器内置语音');
-      speakFallback(text);
-    };
-
-    // 直接尝试播放
-    currentAudio.play().catch(function(e) {
-      console.warn('自动播放被阻止，尝试方案2:', e);
-      speakFallback(text);
+  // 播放
+  const playPromise = audio.play();
+  if (playPromise) {
+    playPromise.catch(function(e) {
+      console.warn('百度TTS播放失败，尝试Google:', e);
+      if (!triedGoogle) {
+        triedGoogle = true;
+        audio.src = googleUrl;
+        audio.load();
+        audio.play().catch(function(e2) {
+          console.warn('Google TTS 也失败:', e2);
+          speakNative(text);
+        });
+      } else {
+        speakNative(text);
+      }
     });
-
-  } catch(e) {
-    console.warn('音频异常，尝试方案2:', e);
-    speakFallback(text);
   }
 }
 
-// 方案2：浏览器内置语音合成（作为备选）
-function speakFallback(text) {
-  if (!('speechSynthesis' in window)) {
-    showToast('⚠️ 语音加载失败');
-    return;
-  }
+// 浏览器内置语音（最后备选）
+function speakNative(text) {
+  if (!('speechSynthesis' in window)) return;
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-CN';
     u.rate = 0.75;
-    const voices = speechSynthesis.getVoices();
-    const zhVoice = voices.find(v => v.lang === 'zh-CN') || voices.find(v => v.lang.startsWith('zh'));
-    if (zhVoice) u.voice = zhVoice;
     speechSynthesis.speak(u);
-  } catch(e) {
-    console.warn('内置语音也失败:', e);
-  }
+  } catch(e) {}
 }
 
 function stopSpeak() {
-  // 停止在线音频
-  if (currentAudio) {
-    try { currentAudio.pause(); currentAudio.currentTime = 0; } catch(e) {}
-    currentAudio = null;
-  }
-  // 停止内置语音
-  if ('speechSynthesis' in window) {
-    try { speechSynthesis.cancel(); } catch(e) {}
-  }
+  if (ttsAudio) { try { ttsAudio.pause(); } catch(e) {} }
+  if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch(e) {} }
 }
 
 function speakWord(text) { speak(text); }
