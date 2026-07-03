@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>中文学习助手 - 对外汉语互动练习</title>
 <style>
-/* ========== 全局样式 ========== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
   --primary: #4A90D9;
@@ -29,7 +28,7 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ========== 顶部导航 ========== */
+/* 顶部导航 */
 .nav {
   background: linear-gradient(135deg, var(--primary), #6C5CE7);
   color: white;
@@ -56,13 +55,13 @@ body {
 }
 .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.35); }
 
-/* ========== 主容器 ========== */
+/* 主容器 */
 .container { max-width: 680px; margin: 0 auto; padding: 20px 16px 100px; }
 .page { display: none; }
 .page.active { display: block; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ========== 卡片 ========== */
+/* 卡片 */
 .card {
   background: var(--card);
   border-radius: var(--radius);
@@ -80,12 +79,8 @@ body {
   gap: 8px;
 }
 
-/* ========== 统计栏 ========== */
-.stats {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+/* 统计栏 */
+.stats { display: flex; gap: 12px; margin-bottom: 20px; }
 .stat {
   flex: 1;
   background: var(--card);
@@ -97,7 +92,26 @@ body {
 .stat-num { font-size: 28px; font-weight: 700; color: var(--primary); }
 .stat-label { font-size: 12px; color: var(--text-light); margin-top: 4px; }
 
-/* ========== 单词复习模块 ========== */
+/* 课程选择器 */
+.lesson-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.lesson-select {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  background: white;
+  color: var(--text);
+}
+.lesson-select:focus { border-color: var(--primary); }
+
+/* 单词复习 */
 .flashcard-area { perspective: 800px; margin-bottom: 20px; }
 .flashcard {
   width: 100%;
@@ -121,15 +135,8 @@ body {
   padding: 24px;
   box-shadow: var(--shadow);
 }
-.flashcard-front {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-.flashcard-back {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  transform: rotateY(180deg);
-}
+.flashcard-front { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+.flashcard-back { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; transform: rotateY(180deg); }
 .flashcard-char { font-size: 64px; font-weight: 700; line-height: 1.2; }
 .flashcard-pinyin { font-size: 22px; margin-top: 8px; opacity: 0.9; }
 .flashcard-meaning { font-size: 26px; font-weight: 600; }
@@ -153,37 +160,45 @@ body {
 .fc-btn.right { background: #F0FFF0; color: #27AE60; }
 .fc-btn.right:hover { background: #E0FFE0; }
 
-.progress-bar {
-  height: 6px;
-  background: var(--border);
-  border-radius: 3px;
-  margin-top: 16px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), #6C5CE7);
-  border-radius: 3px;
-  transition: width 0.3s;
-}
+.progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-top: 16px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #6C5CE7); border-radius: 3px; transition: width 0.3s; }
 
-/* ========== 汉字书写模块 ========== */
-.stroke-demo {
+/* 发音按钮 */
+.speak-btn {
+  background: rgba(255,255,255,0.25);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-bottom: 20px;
+  justify-content: center;
+  margin-top: 12px;
+  transition: all 0.2s;
 }
+.speak-btn:hover { background: rgba(255,255,255,0.4); transform: scale(1.1); }
+.speak-btn.dark {
+  background: #EBF3FF;
+  border-color: var(--primary);
+  color: var(--primary);
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
+  margin-top: 0;
+}
+.speak-btn.dark:hover { background: #D5E8FF; }
+
+/* 汉字书写 */
+.stroke-demo { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; position: relative; }
 .stroke-char { font-size: 72px; color: var(--primary); line-height: 1.1; font-weight: 400; word-break: break-all; text-align: center; max-width: 100%; }
 .stroke-pinyin { font-size: 18px; color: var(--text-light); margin-top: 4px; }
 .stroke-meaning { font-size: 16px; color: var(--text-light); margin-top: 2px; }
+.write-speak-row { display: flex; gap: 8px; margin-top: 10px; }
 
-.canvas-wrap {
-  position: relative;
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto 16px;
-}
+.canvas-wrap { position: relative; width: 100%; max-width: 340px; margin: 0 auto 16px; }
 #writeCanvas {
   width: 100%;
   aspect-ratio: 1;
@@ -208,248 +223,105 @@ body {
 .canvas-btn.primary { background: var(--primary); color: white; border-color: var(--primary); }
 .canvas-btn.primary:hover { background: var(--primary-dark); }
 
-.stroke-order-info {
-  background: #F0F7FF;
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 16px;
-  font-size: 14px;
-  line-height: 1.8;
-  color: #2C5282;
-}
+.stroke-order-info { background: #F0F7FF; border-radius: 12px; padding: 16px; margin-top: 16px; font-size: 14px; line-height: 1.8; color: #2C5282; }
 .stroke-order-info strong { color: var(--primary); }
 
-/* ========== 语法练习模块 ========== */
-.quiz-progress {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
+/* 语法练习 */
+.quiz-progress { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
 .quiz-progress-text { font-size: 14px; color: var(--text-light); white-space: nowrap; }
 .quiz-progress-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
 .quiz-progress-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
-
-.quiz-question {
-  font-size: 20px;
-  font-weight: 600;
-  line-height: 1.6;
-  margin-bottom: 20px;
-  min-height: 60px;
-}
-.quiz-question .blank {
-  display: inline-block;
-  min-width: 80px;
-  border-bottom: 3px solid var(--accent);
-  color: var(--accent);
-  font-weight: 700;
-  text-align: center;
-  margin: 0 4px;
-}
-
+.quiz-question { font-size: 20px; font-weight: 600; line-height: 1.6; margin-bottom: 20px; min-height: 60px; }
+.quiz-question .blank { display: inline-block; min-width: 80px; border-bottom: 3px solid var(--accent); color: var(--accent); font-weight: 700; text-align: center; margin: 0 4px; }
 .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-.quiz-opt {
-  padding: 14px 18px;
-  border: 2px solid var(--border);
-  border-radius: 12px;
-  background: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
-}
+.quiz-opt { padding: 14px 18px; border: 2px solid var(--border); border-radius: 12px; background: white; font-size: 16px; cursor: pointer; transition: all 0.2s; text-align: left; }
 .quiz-opt:hover { border-color: var(--primary); background: #F7FAFF; }
 .quiz-opt.selected { border-color: var(--primary); background: #EBF3FF; }
 .quiz-opt.correct { border-color: #27AE60; background: #E8F8F0; }
 .quiz-opt.wrong { border-color: var(--danger); background: #FFF0F0; }
-
-.quiz-feedback {
-  padding: 16px;
-  border-radius: 12px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  line-height: 1.7;
-  display: none;
-}
+.quiz-feedback { padding: 16px; border-radius: 12px; margin-bottom: 16px; font-size: 14px; line-height: 1.7; display: none; }
 .quiz-feedback.show { display: block; }
 .quiz-feedback.correct { background: #E8F8F0; color: #1E8449; }
 .quiz-feedback.wrong { background: #FFF0F0; color: #C0392B; }
-
-.quiz-next {
-  width: 100%;
-  padding: 14px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
-}
+.quiz-next { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .quiz-next:hover { background: var(--primary-dark); }
-
-.quiz-result {
-  text-align: center;
-  padding: 32px 20px;
-}
+.quiz-result { text-align: center; padding: 32px 20px; }
 .quiz-result-emoji { font-size: 64px; margin-bottom: 16px; }
 .quiz-result-score { font-size: 48px; font-weight: 700; color: var(--primary); }
 .quiz-result-label { font-size: 16px; color: var(--text-light); margin-top: 8px; }
 
-/* ========== 词汇管理模块 ========== */
+/* 词汇管理 */
 .word-table-wrap { overflow-x: auto; margin-bottom: 16px; }
-.word-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-.word-table th {
-  background: #F0F4FF;
-  padding: 10px 12px;
-  text-align: left;
-  font-weight: 600;
-  color: var(--primary);
-  white-space: nowrap;
-}
+.word-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.word-table th { background: #F0F4FF; padding: 10px 12px; text-align: left; font-weight: 600; color: var(--primary); white-space: nowrap; }
 .word-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
 .word-table tr:hover { background: #FAFBFF; }
-.word-del {
-  background: none;
-  border: none;
-  color: var(--danger);
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px 8px;
-  border-radius: 6px;
-}
+.word-del { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; }
 .word-del:hover { background: #FFF0F0; }
+.word-speak { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 16px; padding: 4px 8px; border-radius: 6px; }
+.word-speak:hover { background: #EBF3FF; }
 
-.add-word-form {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-@media (max-width: 500px) {
-  .add-word-form { grid-template-columns: 1fr; }
-}
-.add-word-input {
-  padding: 10px 14px;
-  border: 2px solid var(--border);
-  border-radius: 10px;
-  font-size: 15px;
-  outline: none;
-  transition: border-color 0.2s;
-}
+.add-word-form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+@media (max-width: 500px) { .add-word-form { grid-template-columns: 1fr; } }
+.add-word-input { padding: 10px 14px; border: 2px solid var(--border); border-radius: 10px; font-size: 15px; outline: none; transition: border-color 0.2s; }
 .add-word-input:focus { border-color: var(--primary); }
-.add-word-btn {
-  grid-column: 1 / -1;
-  padding: 12px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-}
+.add-word-btn { grid-column: 1 / -1; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
 .add-word-btn:hover { background: var(--primary-dark); }
 
-.import-area {
-  width: 100%;
-  min-height: 100px;
-  padding: 12px;
-  border: 2px dashed var(--border);
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: monospace;
-  resize: vertical;
-  outline: none;
-  margin-bottom: 10px;
-}
+.import-area { width: 100%; min-height: 100px; padding: 12px; border: 2px dashed var(--border); border-radius: 10px; font-size: 14px; font-family: monospace; resize: vertical; outline: none; margin-bottom: 10px; }
 .import-area:focus { border-color: var(--primary); }
 .import-hint { font-size: 12px; color: var(--text-light); margin-bottom: 12px; }
 
-/* ========== 底部导航 ========== */
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  display: flex;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
-  z-index: 100;
-}
-.bnav-btn {
-  flex: 1;
-  padding: 12px 0 8px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-light);
-  font-size: 11px;
-  transition: color 0.2s;
-}
+/* 课程管理 */
+.lesson-mgmt { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.lesson-mgmt-btn { padding: 8px 14px; border: 2px solid var(--border); background: white; border-radius: 8px; font-size: 13px; cursor: pointer; color: var(--text); }
+.lesson-mgmt-btn:hover { border-color: var(--primary); color: var(--primary); }
+.lesson-mgmt-btn.danger { color: var(--danger); }
+.lesson-mgmt-btn.danger:hover { border-color: var(--danger); }
+
+/* 底部导航 */
+.bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; box-shadow: 0 -2px 10px rgba(0,0,0,0.08); z-index: 100; }
+.bnav-btn { flex: 1; padding: 12px 0 8px; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-light); font-size: 11px; transition: color 0.2s; }
 .bnav-btn.active { color: var(--primary); }
 .bnav-icon { font-size: 22px; }
 
-/* ========== 动画 ========== */
-@keyframes bounceIn {
-  0% { transform: scale(0.5); opacity: 0; }
-  70% { transform: scale(1.05); }
-  100% { transform: scale(1); opacity: 1; }
-}
+@keyframes bounceIn { 0% { transform: scale(0.5); opacity: 0; } 70% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
 .bounce-in { animation: bounceIn 0.4s ease; }
 
-/* ========== 响应式 ========== */
 @media (max-width: 480px) {
   .flashcard { height: 240px; }
   .flashcard-char { font-size: 48px; }
-  .stroke-char { font-size: 72px; }
+  .stroke-char { font-size: 60px; }
   .quiz-question { font-size: 18px; }
 }
 </style>
 </head>
 <body>
 
-<!-- 顶部导航 -->
 <div class="nav">
   <h1>📚 中文学习助手</h1>
   <div class="nav-btns">
-    <button class="nav-btn" onclick="showPage('manage')" title="词汇管理">词库</button>
+    <button class="nav-btn" onclick="showPage('manage')">词库</button>
   </div>
 </div>
 
 <div class="container">
 
-  <!-- ========== 首页/统计 ========== -->
+  <!-- ========== 首页 ========== -->
   <div class="page active" id="page-home">
     <div class="stats">
-      <div class="stat">
-        <div class="stat-num" id="statWords">0</div>
-        <div class="stat-label">生词总数</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="statReview">0</div>
-        <div class="stat-label">今日复习</div>
-      </div>
-      <div class="stat">
-        <div class="stat-num" id="statCorrect">0%</div>
-        <div class="stat-label">正确率</div>
-      </div>
+      <div class="stat"><div class="stat-num" id="statWords">0</div><div class="stat-label">本课生词</div></div>
+      <div class="stat"><div class="stat-num" id="statReview">0</div><div class="stat-label">今日复习</div></div>
+      <div class="stat"><div class="stat-num" id="statCorrect">0%</div><div class="stat-label">正确率</div></div>
     </div>
 
+    <!-- 课程选择 -->
     <div class="card">
-      <div class="card-title">👋 欢迎使用中文学习助手</div>
-      <p style="color:#7F8C8D;line-height:1.8;font-size:14px;">
-        选择一个练习模块开始学习。你可以先<a href="#" onclick="showPage('manage');return false;" style="color:var(--primary)">管理词库</a>，添加你正在教的生词，然后开始练习！
-      </p>
+      <div class="card-title">📖 当前课程</div>
+      <div class="lesson-selector">
+        <select class="lesson-select" id="homeLessonSelect" onchange="switchLesson(this.value)"></select>
+      </div>
+      <div style="font-size:13px;color:var(--text-light);margin-top:8px;" id="homeLessonInfo">共 0 个生词</div>
     </div>
 
     <div class="card" style="cursor:pointer;" onclick="showPage('review')">
@@ -457,23 +329,21 @@ body {
         <div style="font-size:40px;">🃏</div>
         <div>
           <div style="font-size:17px;font-weight:600;">单词复习</div>
-          <div style="font-size:13px;color:#7F8C8D;margin-top:4px;">生词卡片 · 看中文选释义 · 及时反馈</div>
+          <div style="font-size:13px;color:#7F8C8D;margin-top:4px;">生词卡片 · 看中文选释义 · 发音播放</div>
         </div>
         <div style="margin-left:auto;color:#CCC;font-size:20px;">›</div>
       </div>
     </div>
-
     <div class="card" style="cursor:pointer;" onclick="showPage('write')">
       <div style="display:flex;align-items:center;gap:16px;">
         <div style="font-size:40px;">✍️</div>
         <div>
           <div style="font-size:17px;font-weight:600;">汉字书写</div>
-          <div style="font-size:13px;color:#7F8C8D;margin-top:4px;">笔顺参考 · 屏幕手写 · 描红练习</div>
+          <div style="font-size:13px;color:#7F8C8D;margin-top:4px;">笔顺参考 · 屏幕手写 · 发音对照</div>
         </div>
         <div style="margin-left:auto;color:#CCC;font-size:20px;">›</div>
       </div>
     </div>
-
     <div class="card" style="cursor:pointer;" onclick="showPage('quiz')">
       <div style="display:flex;align-items:center;gap:16px;">
         <div style="font-size:40px;">📝</div>
@@ -491,7 +361,7 @@ body {
     <div class="card" style="padding:0;overflow:hidden;">
       <div style="padding:16px 20px 0;display:flex;align-items:center;justify-content:space-between;">
         <div style="font-size:14px;color:#7F8C8D;">
-          卡片 <span id="cardIdx">1</span> / <span id="cardTotal">0</span>
+          <span id="reviewLessonName">第1课</span> · 卡片 <span id="cardIdx">1</span> / <span id="cardTotal">0</span>
         </div>
         <button class="nav-btn" style="background:#F0F4FF;color:var(--primary);font-size:12px;" onclick="shuffleWords()">🔀 随机</button>
       </div>
@@ -500,11 +370,13 @@ body {
           <div class="flashcard-face flashcard-front">
             <div class="flashcard-char" id="fcChar">中</div>
             <div class="flashcard-pinyin" id="fcPinyin">zhōng</div>
+            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcard()" title="点击发音">🔊</button>
             <div class="flashcard-hint">点击翻转查看答案</div>
           </div>
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning" id="fcMeaning">中间、中国</div>
             <div class="flashcard-example" id="fcExample">我在中国的大学学习中文。</div>
+            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcardExample()" title="朗读例句">🔊 例句</button>
             <div class="flashcard-hint">你记住了吗？</div>
           </div>
         </div>
@@ -518,21 +390,18 @@ body {
       </div>
     </div>
 
-    <!-- 复习模式切换 -->
     <div class="card">
       <div class="card-title">🔤 另一种练习方式</div>
       <div style="display:flex;gap:10px;">
         <button class="canvas-btn" style="flex:1;" onclick="startMultipleChoice()">选择题模式</button>
         <button class="canvas-btn" style="flex:1;" onclick="startSpelling()">拼写练习</button>
       </div>
-      <!-- 选择题模式 -->
       <div id="mcArea" style="display:none;margin-top:16px;">
         <div style="font-size:18px;font-weight:600;margin-bottom:14px;" id="mcQuestion">「中国」的英文意思是？</div>
         <div class="quiz-options" id="mcOptions"></div>
         <div class="quiz-feedback" id="mcFeedback"></div>
         <button class="quiz-next" id="mcNext" style="display:none;" onclick="nextMC()">下一题</button>
       </div>
-      <!-- 拼写练习 -->
       <div id="spellArea" style="display:none;margin-top:16px;">
         <div style="font-size:15px;color:#7F8C8D;margin-bottom:8px;" id="spellPrompt">请根据拼音写出汉字：</div>
         <div style="font-size:24px;font-weight:600;color:var(--primary);margin-bottom:14px;" id="spellPinyin">zhōng guó</div>
@@ -552,30 +421,27 @@ body {
         <div class="stroke-char" id="writeDemoChar">中</div>
         <div class="stroke-pinyin" id="writeDemoPinyin">zhōng</div>
         <div class="stroke-meaning" id="writeDemoMeaning">中间、中国</div>
+        <div class="write-speak-row">
+          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].char)" title="发音">🔊 发音</button>
+          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].example)" title="例句" id="writeSpeakExample" style="font-size:13px;width:auto;padding:0 12px;">🔊 例句</button>
+        </div>
       </div>
-
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;">
         <button class="canvas-btn" onclick="changeWriteChar(-1)">◀ 上一个</button>
         <button class="canvas-btn" onclick="showStrokeOrder()">📋 笔顺提示</button>
         <button class="canvas-btn" onclick="changeWriteChar(1)">下一个 ▶</button>
       </div>
-
-      <div class="canvas-wrap">
-        <canvas id="writeCanvas"></canvas>
-      </div>
+      <div class="canvas-wrap"><canvas id="writeCanvas"></canvas></div>
       <div class="canvas-btns">
         <button class="canvas-btn" onclick="clearCanvas()">🗑️ 清除</button>
         <button class="canvas-btn primary" onclick="checkWriting()">✅ 检查</button>
       </div>
       <div id="writeResult" style="margin-top:12px;text-align:center;font-size:14px;display:none;"></div>
-
       <div class="stroke-order-info" id="strokeOrderInfo" style="display:none;">
         <strong>📋 笔顺提示：</strong><br>
         <span id="strokeOrderText">「中」的笔顺：竖、横折、横、竖</span>
       </div>
     </div>
-
-    <!-- 汉字列表 -->
     <div class="card">
       <div class="card-title">📖 选择练习汉字</div>
       <div id="writeCharList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
@@ -591,19 +457,11 @@ body {
         <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizProgFill" style="width:10%;"></div></div>
         <span style="font-size:13px;color:var(--accent);white-space:nowrap;" id="quizScoreDisp">得分：0</span>
       </div>
-
-      <div class="quiz-question" id="quizQuestion">
-        我<span class="blank">___</span>北京。
-      </div>
-
+      <div class="quiz-question" id="quizQuestion">我<span class="blank">___</span>北京。</div>
       <div class="quiz-options" id="quizOptions"></div>
-
       <div class="quiz-feedback" id="quizFeedback"></div>
-
       <button class="quiz-next" id="quizNextBtn" style="display:none;" onclick="nextQuiz()">下一题</button>
     </div>
-
-    <!-- 结果页 -->
     <div class="page" id="quizResultPage" style="display:none;">
       <div class="card">
         <div class="quiz-result">
@@ -618,15 +476,31 @@ body {
 
   <!-- ========== 词汇管理 ========== -->
   <div class="page" id="page-manage">
+    <!-- 课程管理 -->
     <div class="card">
-      <div class="card-title">📥 批量导入词汇</div>
-      <textarea class="import-area" id="importArea" placeholder="每行一个词，格式：汉字,拼音,释义,例句（选填）&#10;例如：&#10;中国,zhōng guó,中国、中间,我在中国学习。&#10;学习,xué xí,study,我要学习中文。&#10;学生,xué sheng,student"></textarea>
-      <div class="import-hint">💡 格式：汉字,拼音,释义（可用 / 分隔多个意思）,例句（可选）。点击"导入"后添加到词库。</div>
+      <div class="card-title">📚 课程管理</div>
+      <div class="lesson-selector">
+        <select class="lesson-select" id="manageLessonSelect" onchange="switchLesson(this.value)"></select>
+      </div>
+      <div class="lesson-mgmt">
+        <button class="lesson-mgmt-btn" onclick="createLesson()">➕ 新建课程</button>
+        <button class="lesson-mgmt-btn" onclick="renameLesson()">✏️ 重命名</button>
+        <button class="lesson-mgmt-btn danger" onclick="deleteCurrentLesson()">🗑️ 删除课程</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-light);margin-top:8px;">
+        当前：<strong id="manageLessonName" style="color:var(--primary);">第1课</strong>（<span id="manageWordCount">0</span> 个词）
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📥 批量导入词汇到当前课</div>
+      <textarea class="import-area" id="importArea" placeholder="每行一个词，格式：汉字,拼音,释义,例句（选填）&#10;例如：&#10;中国,zhōng guó,中国、中间,我在中国学习。&#10;学习,xué xí,study,我要学习中文。"></textarea>
+      <div class="import-hint">💡 格式：汉字,拼音,释义,例句（可选）。导入到当前选中的课程。</div>
       <button class="add-word-btn" onclick="importWords()" style="border-radius:10px;">导入词汇</button>
     </div>
 
     <div class="card">
-      <div class="card-title">➕ 添加单个词汇</div>
+      <div class="card-title">➕ 添加单个词汇到当前课</div>
       <div class="add-word-form">
         <input class="add-word-input" id="addChar" placeholder="汉字（如：学习）">
         <input class="add-word-input" id="addPinyin" placeholder="拼音（如：xué xí）">
@@ -637,20 +511,19 @@ body {
     </div>
 
     <div class="card">
-      <div class="card-title">📋 当前词库（<span id="wordCount">0</span> 个词）</div>
+      <div class="card-title">📋 当前课词库（<span id="wordCount">0</span> 个词）</div>
       <div class="word-table-wrap">
         <table class="word-table">
-          <thead><tr><th>汉字</th><th>拼音</th><th>释义</th><th>操作</th></tr></thead>
+          <thead><tr><th>汉字</th><th>拼音</th><th>释义</th><th>发音</th><th>操作</th></tr></thead>
           <tbody id="wordTableBody"></tbody>
         </table>
       </div>
-      <button class="canvas-btn" style="width:100%;" onclick="exportWords()">📤 导出词库（复制文本）</button>
+      <button class="canvas-btn" style="width:100%;" onclick="exportWords()">📤 导出当前课词库</button>
     </div>
   </div>
 
 </div>
 
-<!-- 底部导航 -->
 <div class="bottom-nav">
   <button class="bnav-btn active" onclick="showPage('home')"><span class="bnav-icon">🏠</span>首页</button>
   <button class="bnav-btn" onclick="showPage('review')"><span class="bnav-icon">🃏</span>复习</button>
@@ -660,165 +533,288 @@ body {
 
 <script>
 /* ==========================================================
-   中文学习助手 - 核心逻辑
+   中文学习助手 v2 - 课程管理 + 语音发音
    ========================================================== */
 
-// ==================== 数据层 ====================
-
-// 内置 HSK 1-2 级示例词库
-let wordBank = [
-  {char:"中国", pinyin:"zhōng guó", meaning:"中国、中间", example:"我在中国学习。"},
-  {char:"学习", pinyin:"xué xí", meaning:"学习、study", example:"我要学习中文。"},
-  {char:"学生", pinyin:"xué sheng", meaning:"学生、student", example:"我是学生。"},
-  {char:"老师", pinyin:"lǎo shī", meaning:"老师、teacher", example:"王老师是我的中文老师。"},
-  {char:"中文", pinyin:"zhōng wén", meaning:"中文、Chinese", example:"我会说中文。"},
-  {char:"谢谢", pinyin:"xiè xie", meaning:"谢谢、thank you", example:"谢谢你！"},
-  {char:"吃饭", pinyin:"chī fàn", meaning:"吃饭、eat a meal", example:"我们一起吃饭吧。"},
-  {char:"喝水", pinyin:"hē shuǐ", meaning:"喝水、drink water", example:"请喝水。"},
-  {char:"朋友", pinyin:"péng you", meaning:"朋友、friend", example:"他是我的朋友。"},
-  {char:"家", pinyin:"jiā", meaning:"家、home", example:"我家在北京。"},
-  {char:"名字", pinyin:"míng zi", meaning:"名字、name", example:"你的名字是什么？"},
-  {char:"人", pinyin:"rén", meaning:"人、person", example:"那个人是我哥哥。"},
-  {char:"好", pinyin:"hǎo", meaning:"好、good", example:"你最近好吗？"},
-  {char:"是", pinyin:"shì", meaning:"是、to be", example:"我是美国人。"},
-  {char:"不", pinyin:"bù", meaning:"不、not", example:"我不吃饭。"},
-  {char:"在", pinyin:"zài", meaning:"在、at/in", example:"我在家。"},
-  {char:"有", pinyin:"yǒu", meaning:"有、have", example:"我有一个朋友。"},
-  {char:"去", pinyin:"qù", meaning:"去、go", example:"我去中国。"},
-  {char:"看", pinyin:"kàn", meaning:"看、look/watch", example:"我看电影。"},
-  {char:"买", pinyin:"mǎi", meaning:"买、buy", example:"我去买东西。"},
-];
-
-// 语法题库
-let quizBank = [
+// ==================== 内置示例数据 ====================
+const DEFAULT_LESSONS = [
   {
-    question: "我___北京。",
-    options: ["是", "在", "有", "去"],
-    answer: 1,
-    explanation: "「在」表示位置，正确句子是「我在北京」。"
+    id: 1, name: "第1课：称谓与身份",
+    words: [
+      {char:"我", pinyin:"wǒ", meaning:"我、I", example:"我是学生。"},
+      {char:"你", pinyin:"nǐ", meaning:"你、you", example:"你好！"},
+      {char:"他", pinyin:"tā", meaning:"他、he", example:"他是老师。"},
+      {char:"老师", pinyin:"lǎo shī", meaning:"老师、teacher", example:"王老师是我的中文老师。"},
+      {char:"学生", pinyin:"xué sheng", meaning:"学生、student", example:"我是学生。"},
+    ]
   },
   {
-    question: "这___我的老师。",
-    options: ["有", "是", "在", "去"],
-    answer: 1,
-    explanation: "「是」表示判断，正确句子是「这是我的老师」。"
+    id: 2, name: "第2课：日常交际",
+    words: [
+      {char:"你好", pinyin:"nǐ hǎo", meaning:"你好、hello", example:"你好，很高兴认识你！"},
+      {char:"谢谢", pinyin:"xiè xie", meaning:"谢谢、thank you", example:"谢谢你！"},
+      {char:"再见", pinyin:"zài jiàn", meaning:"再见、goodbye", example:"明天见，再见！"},
+      {char:"请", pinyin:"qǐng", meaning:"请、please", example:"请进！"},
+      {char:"对不起", pinyin:"duì bu qǐ", meaning:"对不起、sorry", example:"对不起，我迟到了。"},
+    ]
   },
   {
-    question: "我___三个朋友。",
-    options: ["是", "在", "有", "看"],
-    answer: 2,
-    explanation: "「有」表示拥有，正确句子是「我有三个朋友」。"
+    id: 3, name: "第3课：饮食生活",
+    words: [
+      {char:"吃饭", pinyin:"chī fàn", meaning:"吃饭、eat", example:"我们一起吃饭吧。"},
+      {char:"喝水", pinyin:"hē shuǐ", meaning:"喝水、drink", example:"请喝水。"},
+      {char:"买", pinyin:"mǎi", meaning:"买、buy", example:"我去买东西。"},
+      {char:"东西", pinyin:"dōng xi", meaning:"东西、thing", example:"这个东西多少钱？"},
+      {char:"钱", pinyin:"qián", meaning:"钱、money", example:"我没有钱。"},
+    ]
   },
   {
-    question: "请___水。",
-    options: ["吃", "喝", "看", "去"],
-    answer: 1,
-    explanation: "「喝水」是固定搭配，表示 drink water。"
-  },
-  {
-    question: "我___中文。",
-    options: ["学", "吃", "喝", "去"],
-    answer: 0,
-    explanation: "「学中文」是正确搭配，表示 study Chinese。"
-  },
-  {
-    question: "今天天气很___。",
-    options: ["水", "名字", "好", "电影"],
-    answer: 2,
-    explanation: "「天气很好」是正确表达。"
-  },
-  {
-    question: "你___吃饭吗？",
-    options: ["是", "有", "去", "想"],
-    answer: 3,
-    explanation: "「想」表示 want to，正确句子是「你想吃饭吗？」"
-  },
-  {
-    question: "这个___多少钱？",
-    options: ["人", "东西", "电影", "水"],
-    answer: 1,
-    explanation: "「这个东西」表示 this item，询问价格时用。"
-  },
-  {
-    question: "我___家。",
-    options: ["回", "喝", "学", "看"],
-    answer: 0,
-    explanation: "「回家」是固定搭配，表示 go home。"
-  },
-  {
-    question: "她是我___朋友。",
-    options: ["好的", "的", "了", "在"],
-    answer: 1,
-    explanation: "「我的朋友」中「的」表示所属关系。"
+    id: 4, name: "第4课：常用动作",
+    words: [
+      {char:"学习", pinyin:"xué xí", meaning:"学习、study", example:"我要学习中文。"},
+      {char:"看", pinyin:"kàn", meaning:"看、look", example:"我看电影。"},
+      {char:"去", pinyin:"qù", meaning:"去、go", example:"我去中国。"},
+      {char:"在", pinyin:"zài", meaning:"在、at", example:"我在家。"},
+      {char:"有", pinyin:"yǒu", meaning:"有、have", example:"我有一个朋友。"},
+      {char:"是", pinyin:"shì", meaning:"是、to be", example:"我是美国人。"},
+    ]
   },
 ];
 
-// 笔顺对照（简化版，主要汉字）
+// 语法题库（固定，不分课）
+const quizBank = [
+  {question:"我___北京。", options:["是","在","有","去"], answer:1, explanation:"「在」表示位置，正确句子是「我在北京」。"},
+  {question:"这___我的老师。", options:["有","是","在","去"], answer:1, explanation:"「是」表示判断，正确句子是「这是我的老师」。"},
+  {question:"我___三个朋友。", options:["是","在","有","看"], answer:2, explanation:"「有」表示拥有，正确句子是「我有三个朋友」。"},
+  {question:"请___水。", options:["吃","喝","看","去"], answer:1, explanation:"「喝水」是固定搭配。"},
+  {question:"我___中文。", options:["学","吃","喝","去"], answer:0, explanation:"「学中文」是正确搭配。"},
+  {question:"今天天气很___。", options:["水","名字","好","电影"], answer:2, explanation:"「天气很好」是正确表达。"},
+  {question:"你___吃饭吗？", options:["是","有","去","想"], answer:3, explanation:"「想」表示want to，「你想吃饭吗？」"},
+  {question:"这个___多少钱？", options:["人","东西","电影","水"], answer:1, explanation:"「这个东西」询问价格。"},
+  {question:"我___家。", options:["回","喝","学","看"], answer:0, explanation:"「回家」是固定搭配。"},
+  {question:"她是我___朋友。", options:["好的","的","了","在"], answer:1, explanation:"「的」表示所属关系。"},
+];
+
+// 笔顺数据
 const strokeOrders = {
-  "中": "竖、横折、横、竖",
-  "国": "竖、横折、横、横、竖、横、点、横",
-  "学": "点、点、撇、点、横钩、横撇/横钩、竖钩、横",
-  "习": "横折钩、点、提",
-  "生": "撇、横、横、竖、横",
-  "老": "横、竖、横、撇、撇、竖弯钩",
-  "师": "竖、撇、横、竖、横折钩、竖",
-  "中": "竖、横折、横、竖",
-  "文": "点、横、撇、捺",
-  "谢": "点、横折提、撇、竖、横折钩、横、横、横、撇、横、竖钩、点",
-  "吃": "竖、横折、横、撇、横、横折弯钩/横斜钩",
-  "饭": "撇、横撇/横钩、竖、撇、点、撇、横折弯钩/横斜钩、点",
-  "喝": "竖、横折、横、竖、横折、横、横、竖提、撇、捺",
-  "水": "竖钩、横撇/横钩、撇、捺",
-  "朋": "撇、横折钩、横、横、撇、横折钩、横、横",
-  "友": "横、撇、横撇/横钩、捺",
-  "家": "点、点、横撇/横钩、横、撇、弯钩、撇、撇、撇、捺",
-  "名": "撇、横撇/横钩、点、竖、横折、横",
-  "字": "点、点、横撇/横钩、横撇/横钩、竖钩、横",
-  "人": "撇、捺",
-  "好": "撇点、撇、横、横撇/横钩、竖钩、横",
-  "是": "竖、横折、横、横、横、竖、横、撇、捺",
-  "不": "横、撇、竖、点",
-  "在": "横、撇、竖、横、竖、横",
-  "有": "横、撇、竖、横折钩、横、横",
-  "去": "横、竖、横、撇折、点、竖",
-  "看": "撇、横、横、撇、竖、横折、横、横、横",
-  "买": "横撇/横钩、点、点、横、撇、点",
+  "中":"竖、横折、横、竖","国":"竖、横折、横、横、竖、横、点、横",
+  "学":"点、点、撇、点、横钩、横撇/横钩、竖钩、横","习":"横折钩、点、提",
+  "生":"撇、横、横、竖、横","老":"横、竖、横、撇、撇、竖弯钩",
+  "师":"竖、撇、横、竖、横折钩、竖","文":"点、横、撇、捺",
+  "谢":"点、横折提、撇、竖、横折钩、横、横、横、撇、横、竖钩、点",
+  "吃":"竖、横折、横、撇、横、横折弯钩","饭":"撇、横撇/横钩、竖、撇、点、撇、横折弯钩、点",
+  "喝":"竖、横折、横、竖、横折、横、横、竖提、撇、捺","水":"竖钩、横撇/横钩、撇、捺",
+  "朋":"撇、横折钩、横、横、撇、横折钩、横、横","友":"横、撇、横撇/横钩、捺",
+  "家":"点、点、横撇/横钩、横、撇、弯钩、撇、撇、撇、捺","名":"撇、横撇/横钩、点、竖、横折、横",
+  "字":"点、点、横撇/横钩、横撇/横钩、竖钩、横","人":"撇、捺",
+  "好":"撇点、撇、横、横撇/横钩、竖钩、横","是":"竖、横折、横、横、横、竖、横、撇、捺",
+  "不":"横、撇、竖、点","在":"横、撇、竖、横、竖、横","有":"横、撇、竖、横折钩、横、横",
+  "去":"横、竖、横、撇折、点、竖","看":"撇、横、横、撇、竖、横折、横、横、横",
+  "买":"横撇/横钩、点、点、横、撇、点","我":"撇、横、竖钩、提、斜钩、撇、点",
+  "你":"撇、竖、撇、横撇/横钩、竖、撇、点","他":"撇、竖、横折钩、竖、竖弯钩",
+  "再":"横、竖、横折钩、竖、横、横、横","见":"竖、横折、撇、竖弯钩",
+  "请":"点、横折提、横、横、竖、横","对":"横撇/横钩、点、横、竖钩、点",
+  "东":"横、撇折、竖钩、撇、点","西":"横、竖、横折、撇、竖弯、横",
+  "钱":"撇、横、横、横、竖提、横、横、斜钩、撇、点",
+  "回":"竖、横折、横、横、竖、横折、横、横","几":"横、竖弯钩、撇、横折弯钩",
+  "多":"撇、横撇/横钩、横、竖、横撇/横钩、撇、点","少":"竖、撇、点、撇、点",
 };
 
-// 状态
+// ==================== 状态 ====================
+let lessons = [];
+let currentLessonId = 1;
+let wordBank = [];  // 当前课的词汇（兼容别名）
 let reviewList = [];
 let reviewIdx = 0;
 let quizIdx = 0;
 let quizScore = 0;
 let quizTotal = 0;
 let writeIdx = 0;
-let currentWriteWord = null;
 let mcIdx = 0;
 let spellIdx = 0;
 let todayReviewed = 0;
 let totalCorrect = 0;
 let totalAttempts = 0;
+let statsDate = '';
+let currentWriteWord = null;
+
+// ==================== localStorage 持久化 ====================
+function saveData() {
+  try {
+    const data = {
+      lessons: lessons,
+      currentLessonId: currentLessonId,
+      stats: {
+        todayReviewed: todayReviewed,
+        totalCorrect: totalCorrect,
+        totalAttempts: totalAttempts,
+        date: new Date().toDateString()
+      }
+    };
+    localStorage.setItem('chineseLearningApp', JSON.stringify(data));
+  } catch(e) { console.warn('保存失败', e); }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('chineseLearningApp');
+    if (raw) {
+      const data = JSON.parse(raw);
+      lessons = data.lessons || [];
+      currentLessonId = data.currentLessonId || 1;
+      // 跨天重置今日复习数
+      const today = new Date().toDateString();
+      if (data.stats && data.stats.date === today) {
+        todayReviewed = data.stats.todayReviewed || 0;
+        totalCorrect = data.stats.totalCorrect || 0;
+        totalAttempts = data.stats.totalAttempts || 0;
+      }
+      return true;
+    }
+  } catch(e) { console.warn('加载失败', e); }
+  return false;
+}
+
+function initLessons() {
+  if (!loadData() || lessons.length === 0) {
+    // 深拷贝默认数据
+    lessons = JSON.parse(JSON.stringify(DEFAULT_LESSONS));
+    currentLessonId = 1;
+    saveData();
+  }
+  refreshWordBank();
+}
+
+function refreshWordBank() {
+  const lesson = lessons.find(l => l.id === currentLessonId);
+  wordBank = lesson ? lesson.words : [];
+}
+
+function getCurrentLesson() {
+  return lessons.find(l => l.id === currentLessonId);
+}
+
+// ==================== 语音功能 ====================
+let availableVoices = [];
+function loadVoices() {
+  if ('speechSynthesis' in window) {
+    availableVoices = speechSynthesis.getVoices();
+  }
+}
+if ('speechSynthesis' in window) {
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+
+function speak(text) {
+  if (!('speechSynthesis' in window) || !text) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'zh-CN';
+  u.rate = 0.8;
+  u.pitch = 1;
+  // 优先使用中文语音
+  const zhVoice = availableVoices.find(v => v.lang.startsWith('zh'));
+  if (zhVoice) u.voice = zhVoice;
+  speechSynthesis.speak(u);
+}
+
+function speakWord(text) { speak(text); }
+function speakFlashcard() {
+  const w = reviewList[reviewIdx];
+  if (w) speak(w.char);
+}
+function speakFlashcardExample() {
+  const w = reviewList[reviewIdx];
+  if (w && w.example) speak(w.example);
+}
+
+// ==================== 课程管理 ====================
+function renderLessonSelectors() {
+  const homeSel = document.getElementById('homeLessonSelect');
+  const manageSel = document.getElementById('manageLessonSelect');
+  const optionsHTML = lessons.map(l =>
+    `<option value="${l.id}" ${l.id === currentLessonId ? 'selected' : ''}>${l.name}（${l.words.length}词）</option>`
+  ).join('');
+  homeSel.innerHTML = optionsHTML;
+  manageSel.innerHTML = optionsHTML;
+
+  const lesson = getCurrentLesson();
+  const name = lesson ? lesson.name : '无课程';
+  const count = lesson ? lesson.words.length : 0;
+  document.getElementById('homeLessonInfo').textContent = `共 ${count} 个生词`;
+  document.getElementById('manageLessonName').textContent = name;
+  document.getElementById('manageWordCount').textContent = count;
+  document.getElementById('reviewLessonName').textContent = name;
+}
+
+function switchLesson(id) {
+  currentLessonId = parseInt(id);
+  refreshWordBank();
+  writeIdx = 0;
+  saveData();
+  renderLessonSelectors();
+  updateStats();
+  // 如果在复习或书写页，重新初始化
+  if (document.getElementById('page-review').classList.contains('active')) initReview();
+  if (document.getElementById('page-write').classList.contains('active')) initWrite();
+}
+
+function createLesson() {
+  const name = prompt('请输入课程名称：', '第' + (lessons.length + 1) + '课');
+  if (!name) return;
+  const newId = lessons.length > 0 ? Math.max(...lessons.map(l => l.id)) + 1 : 1;
+  lessons.push({ id: newId, name: name, words: [] });
+  currentLessonId = newId;
+  refreshWordBank();
+  saveData();
+  renderLessonSelectors();
+  updateStats();
+  renderWordTable();
+  showToast(`✅ 已创建「${name}」`);
+}
+
+function renameLesson() {
+  const lesson = getCurrentLesson();
+  if (!lesson) return;
+  const name = prompt('请输入新的课程名称：', lesson.name);
+  if (!name) return;
+  lesson.name = name;
+  saveData();
+  renderLessonSelectors();
+  showToast('✅ 已重命名');
+}
+
+function deleteCurrentLesson() {
+  const lesson = getCurrentLesson();
+  if (!lesson) return;
+  if (lessons.length <= 1) { showToast('⚠️ 至少保留一个课程'); return; }
+  if (!confirm(`确定删除「${lesson.name}」吗？该课的所有词汇都会被删除。`)) return;
+  lessons = lessons.filter(l => l.id !== currentLessonId);
+  currentLessonId = lessons[0].id;
+  refreshWordBank();
+  writeIdx = 0;
+  saveData();
+  renderLessonSelectors();
+  updateStats();
+  renderWordTable();
+  showToast('已删除课程');
+}
 
 // ==================== 页面切换 ====================
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const target = document.getElementById('page-' + page);
-  if (target) {
-    target.classList.add('active');
-    target.style.display = 'block';
-  }
+  if (target) { target.classList.add('active'); target.style.display = 'block'; }
   document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-  // 更新底部导航高亮
   const navMap = {home:0, review:1, write:2, quiz:3};
-  if (navMap[page] !== undefined) {
-    document.querySelectorAll('.bnav-btn')[navMap[page]].classList.add('active');
-  }
-  // 进入页面时初始化
+  if (navMap[page] !== undefined) document.querySelectorAll('.bnav-btn')[navMap[page]].classList.add('active');
+  refreshWordBank();
   if (page === 'review') initReview();
   if (page === 'write') initWrite();
   if (page === 'quiz') initQuiz();
-  if (page === 'manage') renderWordTable();
-  if (page === 'home') updateStats();
+  if (page === 'manage') { renderLessonSelectors(); renderWordTable(); }
+  if (page === 'home') { renderLessonSelectors(); updateStats(); }
 }
 
 // ==================== 统计 ====================
@@ -842,15 +838,12 @@ function shuffle(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 }
-function shuffleWords() {
-  initReview();
-  showToast('已随机排序！');
-}
+function shuffleWords() { initReview(); showToast('已随机排序！'); }
 function showCard() {
   if (reviewList.length === 0) {
     document.getElementById('fcChar').textContent = '✅';
-    document.getElementById('fcPinyin').textContent = '全部复习完毕！';
-    document.getElementById('fcMeaning').textContent = '今天做得很好！';
+    document.getElementById('fcPinyin').textContent = '没有生词，请先添加';
+    document.getElementById('fcMeaning').textContent = '请到词库添加生词';
     document.getElementById('fcExample').textContent = '';
     document.getElementById('cardIdx').textContent = 0;
     document.getElementById('cardTotal').textContent = 0;
@@ -865,17 +858,16 @@ function showCard() {
   document.getElementById('cardIdx').textContent = reviewIdx + 1;
   document.getElementById('cardTotal').textContent = reviewList.length;
   document.getElementById('reviewProgress').style.width = ((reviewIdx) / reviewList.length * 100) + '%';
-  // 重置翻转
   document.getElementById('flashcard').classList.remove('flipped');
 }
-function flipCard() {
-  document.getElementById('flashcard').classList.toggle('flipped');
-}
+function flipCard() { document.getElementById('flashcard').classList.toggle('flipped'); }
 function markCard(remembered) {
+  if (reviewList.length === 0) return;
   todayReviewed++;
   totalAttempts++;
   if (remembered) totalCorrect++;
   updateStats();
+  saveData();
   reviewIdx++;
   if (reviewIdx >= reviewList.length) {
     showCard();
@@ -893,23 +885,19 @@ function startMultipleChoice() {
   nextMC();
 }
 function nextMC() {
-  if (mcIdx >= wordBank.length) { mcIdx = 0; }
+  if (wordBank.length === 0) { showToast('请先添加生词'); return; }
+  if (mcIdx >= wordBank.length) mcIdx = 0;
   const w = wordBank[mcIdx];
-  // 随机选一个干扰项
   let options = [w.meaning];
   let pool = wordBank.filter((_, i) => i !== mcIdx);
   shuffle(pool);
-  for (let i = 0; i < 3 && i < pool.length; i++) {
-    options.push(pool[i].meaning);
-  }
+  for (let i = 0; i < 3 && i < pool.length; i++) options.push(pool[i].meaning);
   while (options.length < 4) options.push('不知道');
   shuffle(options);
-
   document.getElementById('mcQuestion').textContent = `「${w.char}」的意思是？`;
   document.getElementById('mcFeedback').className = 'quiz-feedback';
   document.getElementById('mcFeedback').style.display = 'none';
   document.getElementById('mcNext').style.display = 'none';
-
   const optDiv = document.getElementById('mcOptions');
   optDiv.innerHTML = '';
   options.forEach((opt, i) => {
@@ -921,8 +909,7 @@ function nextMC() {
   });
 }
 function checkMC(selected, correct, btn) {
-  const allOpts = document.querySelectorAll('#mcOptions .quiz-opt');
-  allOpts.forEach(o => o.style.pointerEvents = 'none');
+  document.querySelectorAll('#mcOptions .quiz-opt').forEach(o => o.style.pointerEvents = 'none');
   const fb = document.getElementById('mcFeedback');
   if (selected === correct) {
     btn.classList.add('correct');
@@ -933,13 +920,13 @@ function checkMC(selected, correct, btn) {
     btn.classList.add('wrong');
     fb.className = 'quiz-feedback wrong show';
     fb.textContent = `❌ 正确答案是：${correct}`;
-    // 高亮正确答案
-    allOpts.forEach(o => {
+    document.querySelectorAll('#mcOptions .quiz-opt').forEach(o => {
       if (o.textContent.includes(correct)) o.classList.add('correct');
     });
   }
   totalAttempts++;
   updateStats();
+  saveData();
   document.getElementById('mcNext').style.display = 'block';
   mcIdx++;
 }
@@ -952,6 +939,7 @@ function startSpelling() {
   nextSpell();
 }
 function nextSpell() {
+  if (wordBank.length === 0) { showToast('请先添加生词'); return; }
   if (spellIdx >= wordBank.length) spellIdx = 0;
   const w = wordBank[spellIdx];
   document.getElementById('spellPinyin').textContent = w.pinyin;
@@ -977,6 +965,7 @@ function checkSpelling() {
     fb.textContent = `❌ 正确答案是：${w.char}（${w.pinyin}）`;
   }
   updateStats();
+  saveData();
   document.getElementById('spellNext').style.display = 'block';
 }
 
@@ -990,15 +979,18 @@ function initWrite() {
 function updateWriteChar() {
   const w = wordBank[writeIdx];
   if (!w) return;
-  // 显示完整词组
   document.getElementById('writeDemoChar').textContent = w.char;
   document.getElementById('writeDemoPinyin').textContent = w.pinyin;
   document.getElementById('writeDemoMeaning').textContent = w.meaning;
   document.getElementById('strokeOrderInfo').style.display = 'none';
-  // 更新笔顺提示，显示每个字的笔顺
   currentWriteWord = w;
+  // 隐藏例句按钮如果没有例句
+  const exBtn = document.getElementById('writeSpeakExample');
+  if (w.example) { exBtn.style.display = ''; exBtn.textContent = '🔊 例句'; }
+  else { exBtn.style.display = 'none'; }
 }
 function changeWriteChar(dir) {
+  if (wordBank.length === 0) return;
   writeIdx += dir;
   if (writeIdx < 0) writeIdx = wordBank.length - 1;
   if (writeIdx >= wordBank.length) writeIdx = 0;
@@ -1009,7 +1001,6 @@ function changeWriteChar(dir) {
 function showStrokeOrder() {
   const w = wordBank[writeIdx];
   if (!w) return;
-  // 显示词组中每个字的笔顺
   let orders = [];
   for (let i = 0; i < w.char.length; i++) {
     const c = w.char[i];
@@ -1033,20 +1024,15 @@ function renderCharList() {
   });
 }
 
-// Canvas 绘图
+// Canvas
 let canvas, ctx, drawing = false;
 function initCanvas() {
   canvas = document.getElementById('writeCanvas');
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * 2;  // 高清
+  canvas.width = rect.width * 2;
   canvas.height = rect.width * 2;
   ctx = canvas.getContext('2d');
-  ctx.lineWidth = 8;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#2C3E50';
-
-  // 触摸/鼠标事件
+  ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2C3E50';
   canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
   canvas.onmousemove = (e) => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
   canvas.onmouseup = () => drawing = false;
@@ -1055,15 +1041,8 @@ function initCanvas() {
   canvas.ontouchmove = (e) => { e.preventDefault(); if (!drawing) return; const p = getTouchPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
   canvas.ontouchend = () => drawing = false;
 }
-function getPos(e) {
-  const r = canvas.getBoundingClientRect();
-  return { x: (e.clientX - r.left) * 2, y: (e.clientY - r.top) * 2 };
-}
-function getTouchPos(e) {
-  const r = canvas.getBoundingClientRect();
-  const t = e.touches[0];
-  return { x: (t.clientX - r.left) * 2, y: (t.clientY - r.top) * 2 };
-}
+function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * 2, y: (e.clientY - r.top) * 2 }; }
+function getTouchPos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches[0]; return { x: (t.clientX - r.left) * 2, y: (t.clientY - r.top) * 2 }; }
 function clearCanvas() {
   if (!ctx) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1071,49 +1050,37 @@ function clearCanvas() {
 }
 function checkWriting() {
   const w = wordBank[writeIdx];
+  if (!w) return;
   const res = document.getElementById('writeResult');
   res.style.display = 'block';
-
-  // 检测画板上是否有内容（通过统计非透明像素）
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   let pixelCount = 0;
-  for (let i = 3; i < imgData.data.length; i += 4) {
-    if (imgData.data[i] > 0) { pixelCount++; }
-  }
-
+  for (let i = 3; i < imgData.data.length; i += 4) { if (imgData.data[i] > 0) pixelCount++; }
   if (pixelCount < 100) {
-    // 画板基本是空的
     res.innerHTML = `✏️ 还没写字哦！请在田字格里练习写「${w.char}」<br>💡 点击「笔顺提示」查看正确笔顺。`;
     res.style.color = 'var(--accent)';
   } else {
-    // 有写字，给出鼓励反馈
     const tips = [
       `👍 不错！继续练习「${w.char}」！`,
       `✅ 写得很好！再写一遍「${w.char}」试试！`,
       `💪 很棒！注意笔顺哦，点击「笔顺提示」对照一下。`,
       `🌟 继续加油！「${w.char}」一共 ${w.char.length} 个字，都要练习。`
     ];
-    const tip = tips[Math.floor(Math.random() * tips.length)];
-    res.innerHTML = `${tip}<br>💡 写完后点「清除」可以重新练习。`;
+    res.innerHTML = `${tips[Math.floor(Math.random() * tips.length)]}<br>💡 写完后点「清除」可以重新练习。`;
     res.style.color = '#27AE60';
   }
 }
 
 // ==================== 语法练习 ====================
 function initQuiz() {
-  // 隐藏结果页
   document.getElementById('quizResultPage').style.display = 'none';
   document.querySelector('#page-quiz .card').style.display = 'block';
-  quizIdx = 0;
-  quizScore = 0;
+  quizIdx = 0; quizScore = 0;
   quizTotal = Math.min(quizBank.length, 10);
   showQuizQuestion();
 }
 function showQuizQuestion() {
-  if (quizIdx >= quizTotal) {
-    showQuizResult();
-    return;
-  }
+  if (quizIdx >= quizTotal) { showQuizResult(); return; }
   const q = quizBank[quizIdx];
   document.getElementById('quizProgText').textContent = `第 ${quizIdx + 1} 题 / 共 ${quizTotal} 题`;
   document.getElementById('quizProgFill').style.width = ((quizIdx) / quizTotal * 100) + '%';
@@ -1122,7 +1089,6 @@ function showQuizQuestion() {
   document.getElementById('quizFeedback').className = 'quiz-feedback';
   document.getElementById('quizFeedback').style.display = 'none';
   document.getElementById('quizNextBtn').style.display = 'none';
-
   const optDiv = document.getElementById('quizOptions');
   optDiv.innerHTML = '';
   q.options.forEach((opt, i) => {
@@ -1135,10 +1101,8 @@ function showQuizQuestion() {
 }
 function checkQuiz(selectedIdx, btn) {
   const q = quizBank[quizIdx];
-  const allOpts = document.querySelectorAll('#quizOptions .quiz-opt');
-  allOpts.forEach(o => o.style.pointerEvents = 'none');
+  document.querySelectorAll('#quizOptions .quiz-opt').forEach(o => o.style.pointerEvents = 'none');
   const fb = document.getElementById('quizFeedback');
-
   if (selectedIdx === q.answer) {
     btn.classList.add('correct');
     fb.className = 'quiz-feedback correct show';
@@ -1148,15 +1112,12 @@ function checkQuiz(selectedIdx, btn) {
     btn.classList.add('wrong');
     fb.className = 'quiz-feedback wrong show';
     fb.textContent = `❌ 正确答案是「${q.options[q.answer]}」。${q.explanation}`;
-    allOpts[q.answer].classList.add('correct');
+    document.querySelectorAll('#quizOptions .quiz-opt')[q.answer].classList.add('correct');
   }
   document.getElementById('quizScoreDisp').textContent = `得分：${quizScore}`;
   document.getElementById('quizNextBtn').style.display = 'block';
 }
-function nextQuiz() {
-  quizIdx++;
-  showQuizQuestion();
-}
+function nextQuiz() { quizIdx++; showQuizQuestion(); }
 function showQuizResult() {
   document.querySelector('#page-quiz .card').style.display = 'none';
   document.getElementById('quizResultPage').style.display = 'block';
@@ -1167,9 +1128,7 @@ function showQuizResult() {
   else if (rate >= 50) { document.getElementById('resultEmoji').textContent = '💪'; document.getElementById('resultLabel').textContent = '还可以，多练习几次！'; }
   else { document.getElementById('resultEmoji').textContent = '📚'; document.getElementById('resultLabel').textContent = '别灰心，多复习几遍！'; }
 }
-function restartQuiz() {
-  initQuiz();
-}
+function restartQuiz() { initQuiz(); }
 
 // ==================== 词汇管理 ====================
 function renderWordTable() {
@@ -1181,11 +1140,18 @@ function renderWordTable() {
       <td style="font-size:16px;font-weight:600;">${w.char}</td>
       <td>${w.pinyin}</td>
       <td>${w.meaning}</td>
+      <td><button class="word-speak" onclick="speak('${w.char.replace(/'/g,"\\'")}')" title="发音">🔊</button></td>
       <td><button class="word-del" onclick="deleteWord(${i})" title="删除">✕</button></td>
     `;
     tbody.appendChild(tr);
   });
   document.getElementById('wordCount').textContent = wordBank.length;
+  // 同步管理页课程信息
+  const lesson = getCurrentLesson();
+  if (lesson) {
+    document.getElementById('manageWordCount').textContent = wordBank.length;
+    document.getElementById('manageLessonName').textContent = lesson.name;
+  }
   updateStats();
 }
 function addSingleWord() {
@@ -1194,49 +1160,57 @@ function addSingleWord() {
   const meaning = document.getElementById('addMeaning').value.trim();
   const example = document.getElementById('addExample').value.trim();
   if (!char || !pinyin || !meaning) { showToast('请填写汉字、拼音和释义'); return; }
-  wordBank.push({ char, pinyin, meaning, example });
+  const lesson = getCurrentLesson();
+  if (!lesson) { showToast('请先创建课程'); return; }
+  lesson.words.push({ char, pinyin, meaning, example });
+  refreshWordBank();
   document.getElementById('addChar').value = '';
   document.getElementById('addPinyin').value = '';
   document.getElementById('addMeaning').value = '';
   document.getElementById('addExample').value = '';
   renderWordTable();
-  if (document.getElementById('page-write').classList.contains('active')) renderCharList();
-  showToast(`✅ 已添加「${char}」`);
+  renderLessonSelectors();
+  saveData();
+  showToast(`✅ 已添加「${char}」到${lesson.name}`);
 }
 function deleteWord(i) {
   const w = wordBank[i];
-  wordBank.splice(i, 1);
+  const lesson = getCurrentLesson();
+  if (!lesson) return;
+  lesson.words.splice(i, 1);
+  refreshWordBank();
   renderWordTable();
+  renderLessonSelectors();
+  saveData();
   showToast(`已删除「${w.char}」`);
 }
 function importWords() {
   const text = document.getElementById('importArea').value.trim();
   if (!text) return;
+  const lesson = getCurrentLesson();
+  if (!lesson) { showToast('请先创建课程'); return; }
   const lines = text.split('\n');
   let count = 0;
   lines.forEach(line => {
     const parts = line.split(',').map(s => s.trim());
     if (parts[0] && parts[1] && parts[2]) {
-      wordBank.push({ char: parts[0], pinyin: parts[1], meaning: parts[2], example: parts[3] || '' });
+      lesson.words.push({ char: parts[0], pinyin: parts[1], meaning: parts[2], example: parts[3] || '' });
       count++;
     }
   });
+  refreshWordBank();
   document.getElementById('importArea').value = '';
   renderWordTable();
-  showToast(`✅ 成功导入 ${count} 个词汇！`);
+  renderLessonSelectors();
+  saveData();
+  showToast(`✅ 成功导入 ${count} 个词汇到${lesson.name}！`);
 }
 function exportWords() {
   const text = wordBank.map(w => `${w.char},${w.pinyin},${w.meaning}${w.example ? ',' + w.example : ''}`).join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    showToast('✅ 词库已复制到剪贴板！');
-  }).catch(() => {
-    // fallback
+  navigator.clipboard.writeText(text).then(() => showToast('✅ 词库已复制到剪贴板！')).catch(() => {
     const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
     showToast('✅ 词库已复制到剪贴板！');
   });
 }
@@ -1245,13 +1219,15 @@ function exportWords() {
 function showToast(msg) {
   const t = document.createElement('div');
   t.textContent = msg;
-  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:14px;z-index:999;animation:bounceIn 0.3s ease;';
+  t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:14px;z-index:999;animation:bounceIn 0.3s ease;max-width:90%;text-align:center;';
   document.body.appendChild(t);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2000);
 }
 
 // ==================== 初始化 ====================
 window.onload = function() {
+  initLessons();
+  renderLessonSelectors();
   updateStats();
   initCanvas();
 };
