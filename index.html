@@ -370,13 +370,13 @@ body {
           <div class="flashcard-face flashcard-front">
             <div class="flashcard-char" id="fcChar">中</div>
             <div class="flashcard-pinyin" id="fcPinyin">zhōng</div>
-            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcard()" title="点击发音">🔊</button>
+            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcard(this)" title="点击发音">🔊</button>
             <div class="flashcard-hint">点击翻转查看答案</div>
           </div>
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning" id="fcMeaning">中间、中国</div>
             <div class="flashcard-example" id="fcExample">我在中国的大学学习中文。</div>
-            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcardExample()" title="朗读例句">🔊 例句</button>
+            <button class="speak-btn" onclick="event.stopPropagation();speakFlashcardExample(this)" title="朗读例句">🔊 例句</button>
             <div class="flashcard-hint">你记住了吗？</div>
           </div>
         </div>
@@ -422,8 +422,8 @@ body {
         <div class="stroke-pinyin" id="writeDemoPinyin">zhōng</div>
         <div class="stroke-meaning" id="writeDemoMeaning">中间、中国</div>
         <div class="write-speak-row">
-          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].char)" title="发音">🔊 发音</button>
-          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].example)" title="例句" id="writeSpeakExample" style="font-size:13px;width:auto;padding:0 12px;">🔊 例句</button>
+          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].char, this)" title="发音">🔊 发音</button>
+          <button class="speak-btn dark" onclick="speakWord(wordBank[writeIdx].example, this)" title="例句" id="writeSpeakExample" style="font-size:13px;width:auto;padding:0 12px;">🔊 例句</button>
         </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;">
@@ -710,19 +710,37 @@ function getCurrentLesson() {
 // ==================== 语音功能（多源TTS） ====================
 // 使用隐藏audio元素播放，兼容所有手机浏览器
 
-// 创建隐藏的audio元素
+// 创建可见的audio元素（华为浏览器需要可见控件才能播放）
 let ttsAudio = null;
 function getTtsAudio() {
   if (!ttsAudio) {
     ttsAudio = document.createElement('audio');
-    ttsAudio.style.display = 'none';
+    ttsAudio.controls = true;
+    ttsAudio.style.cssText = 'display:none;width:100%;margin-top:8px;border-radius:8px;';
     document.body.appendChild(ttsAudio);
   }
   return ttsAudio;
 }
 
-function speak(text) {
+// 显示音频播放器（在按钮下方）
+function showAudioPlayer(audioElement, containerId) {
+  let container = document.getElementById(containerId);
+  if (!container) {
+    container = document.createElement('div');
+    container.id = containerId;
+    container.style.cssText = 'margin-top:8px;';
+    audioElement.parentNode.insertBefore(container, audioElement.nextSibling);
+  }
+  container.innerHTML = '';
+  container.appendChild(audioElement);
+  audioElement.style.display = 'block';
+}
+
+function speak(text, btnElement) {
   if (!text) return;
+
+  // 先用 alert 确认按钮触发（调试用，确认正常后删除）
+  // alert('正在加载语音: ' + text);
 
   const audio = getTtsAudio();
 
@@ -733,34 +751,44 @@ function speak(text) {
   // 编码文本
   const encoded = encodeURIComponent(text);
 
-  // 尝试多个 TTS 源（百度翻译 TTS + Google TTS）
-  // 百度翻译 TTS（国内速度快，华为手机友好）
+  // 百度翻译 TTS（主）+ Google TTS（备）
   const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
-  // Google TTS（国际备用）
   const googleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
-  // 先尝试百度
-  audio.src = baiduUrl;
-  audio.load();
+  // 显示加载提示
+  if (btnElement) {
+    const originalText = btnElement.textContent;
+    btnElement.textContent = '⏳ 加载中...';
+    audio.onplay = function() {
+      btnElement.textContent = originalText;
+    };
+    audio.onerror = function() {
+      btnElement.textContent = originalText;
+    };
+  }
 
-  // 如果百度失败，尝试 Google
+  // 先尝试百度
   let triedGoogle = false;
+  let triedNative = false;
+
   audio.onerror = function() {
     if (!triedGoogle) {
       triedGoogle = true;
       audio.src = googleUrl;
       audio.load();
-      audio.play().catch(function(e) {
-        console.warn('Google TTS 也失败:', e);
-        // 最后尝试浏览器内置语音
-        speakNative(text);
+      audio.play().catch(function() {
+        if (!triedNative) { triedNative = true; speakNative(text); }
       });
-    } else {
+    } else if (!triedNative) {
+      triedNative = true;
       speakNative(text);
     }
   };
 
-  // 播放
+  // 设置源并播放
+  audio.src = baiduUrl;
+  audio.load();
+
   const playPromise = audio.play();
   if (playPromise) {
     playPromise.catch(function(e) {
@@ -769,27 +797,49 @@ function speak(text) {
         triedGoogle = true;
         audio.src = googleUrl;
         audio.load();
-        audio.play().catch(function(e2) {
-          console.warn('Google TTS 也失败:', e2);
-          speakNative(text);
+        audio.play().catch(function() {
+          if (!triedNative) { triedNative = true; speakNative(text); }
         });
-      } else {
+      } else if (!triedNative) {
+        triedNative = true;
         speakNative(text);
       }
     });
+  }
+
+  // 如果按钮元素存在，在按钮下方显示播放器
+  if (btnElement) {
+    const wrapper = btnElement.parentElement;
+    // 找到或创建播放器容器
+    let playerDiv = wrapper.querySelector('.audio-player-div');
+    if (!playerDiv) {
+      playerDiv = document.createElement('div');
+      playerDiv.className = 'audio-player-div';
+      playerDiv.style.cssText = 'margin-top:8px;';
+      wrapper.appendChild(playerDiv);
+    }
+    // 移动audio元素到容器中
+    playerDiv.innerHTML = '';
+    playerDiv.appendChild(audio);
+    audio.style.display = 'block';
   }
 }
 
 // 浏览器内置语音（最后备选）
 function speakNative(text) {
-  if (!('speechSynthesis' in window)) return;
+  if (!('speechSynthesis' in window)) {
+    showToast('⚠️ 语音需要联网才能播放');
+    return;
+  }
   try {
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'zh-CN';
     u.rate = 0.75;
     speechSynthesis.speak(u);
-  } catch(e) {}
+  } catch(e) {
+    showToast('⚠️ 语音播放失败，请检查网络');
+  }
 }
 
 function stopSpeak() {
@@ -797,14 +847,14 @@ function stopSpeak() {
   if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch(e) {} }
 }
 
-function speakWord(text) { speak(text); }
-function speakFlashcard() {
+function speakWord(text, btn) { speak(text, btn); }
+function speakFlashcard(btn) {
   const w = reviewList[reviewIdx];
-  if (w) speak(w.char);
+  if (w) speak(w.char, btn);
 }
-function speakFlashcardExample() {
+function speakFlashcardExample(btn) {
   const w = reviewList[reviewIdx];
-  if (w && w.example) speak(w.example);
+  if (w && w.example) speak(w.example, btn);
 }
 
 // ==================== 课程管理 ====================
@@ -1395,7 +1445,7 @@ function renderWordTable() {
       <td style="font-size:16px;font-weight:600;">${w.char}</td>
       <td>${w.pinyin}</td>
       <td>${w.meaning}</td>
-      <td><button class="word-speak" onclick="speak('${w.char.replace(/'/g,"\\'")}')" title="发音">🔊</button></td>
+      <td><button class="word-speak" onclick="speakWord('${w.char.replace(/'/g,"\\'")}', this)" title="发音">🔊</button></td>
       <td><button class="word-del" onclick="deleteWord(${i})" title="删除">✕</button></td>
     `;
     tbody.appendChild(tr);
