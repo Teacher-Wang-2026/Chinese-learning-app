@@ -428,7 +428,7 @@ body {
       </div>
       <div style="display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;">
         <button class="canvas-btn" onclick="changeWriteChar(-1)">◀ 上一个</button>
-        <button class="canvas-btn" onclick="showStrokeOrder()">📋 笔顺提示</button>
+        <button class="canvas-btn primary" onclick="playStrokeAnimation()">🎬 笔顺演示</button>
         <button class="canvas-btn" onclick="changeWriteChar(1)">下一个 ▶</button>
       </div>
       <div class="canvas-wrap"><canvas id="writeCanvas"></canvas></div>
@@ -437,9 +437,22 @@ body {
         <button class="canvas-btn primary" onclick="checkWriting()">✅ 检查</button>
       </div>
       <div id="writeResult" style="margin-top:12px;text-align:center;font-size:14px;display:none;"></div>
-      <div class="stroke-order-info" id="strokeOrderInfo" style="display:none;">
-        <strong>📋 笔顺提示：</strong><br>
-        <span id="strokeOrderText">「中」的笔顺：竖、横折、横、竖</span>
+
+      <!-- 笔顺演示区 -->
+      <div id="strokeDemoArea" style="display:none;margin-top:20px;border-top:1px solid var(--border);padding-top:16px;">
+        <div class="card-title">🎬 笔顺演示</div>
+        <div style="position:relative;width:100%;max-width:340px;margin:0 auto 12px;aspect-ratio:1;background:#FAFCFF;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <canvas id="strokeDemoCanvas" style="width:100%;height:100%;display:block;"></canvas>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
+          <button class="canvas-btn" onclick="replayStrokeAnimation()">🔄 重播</button>
+          <button class="canvas-btn" onclick="toggleStrokeSpeed()" id="speedBtn">⚡ 速度: 正常</button>
+          <span style="font-size:13px;color:var(--text-light);" id="strokeStepInfo">第 0 笔</span>
+        </div>
+        <div class="stroke-order-info" style="margin-top:12px;">
+          <strong>📝 笔顺说明：</strong><br>
+          <span id="strokeOrderText">「中」的笔顺：竖、横折、横、竖</span>
+        </div>
       </div>
     </div>
     <div class="card">
@@ -1008,7 +1021,184 @@ function showStrokeOrder() {
     orders.push(`「${c}」：${order}`);
   }
   document.getElementById('strokeOrderText').innerHTML = `「${w.char}」的笔顺：<br>${orders.join('<br>')}`;
-  document.getElementById('strokeOrderInfo').style.display = 'block';
+}
+
+// ==================== 笔顺动画演示 ====================
+let strokeAnimTimer = null;
+let strokeAnimSpeed = 600; // 每笔间隔毫秒
+let strokeAnimSpeedLevel = 1; // 0慢 1正常 2快
+const strokeColors = ['#E74C3C', '#F5A623', '#27AE60', '#4A90D9', '#9B59B6', '#1ABC9C', '#E67E22', '#34495E', '#E91E63', '#3F51B5', '#00BCD4', '#8BC34A'];
+
+function playStrokeAnimation() {
+  const w = wordBank[writeIdx];
+  if (!w) return;
+  // 显示演示区
+  document.getElementById('strokeDemoArea').style.display = 'block';
+  // 更新笔顺说明
+  showStrokeOrder();
+  // 开始动画
+  startStrokeAnimation(w.char);
+}
+
+function replayStrokeAnimation() {
+  const w = wordBank[writeIdx];
+  if (!w) return;
+  startStrokeAnimation(w.char);
+}
+
+function toggleStrokeSpeed() {
+  const levels = [
+    {speed: 1000, label: '🐢 慢速'},
+    {speed: 600, label: '⚡ 速度: 正常'},
+    {speed: 300, label: '🚀 快速'},
+  ];
+  strokeAnimSpeedLevel = (strokeAnimSpeedLevel + 1) % 3;
+  strokeAnimSpeed = levels[strokeAnimSpeedLevel].speed;
+  document.getElementById('speedBtn').textContent = levels[strokeAnimSpeedLevel].label;
+}
+
+function startStrokeAnimation(char) {
+  // 停止之前的动画
+  if (strokeAnimTimer) { clearTimeout(strokeAnimTimer); strokeAnimTimer = null; }
+
+  const canvas = document.getElementById('strokeDemoCanvas');
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * 2;
+  canvas.height = rect.height * 2;
+  const ctx2 = canvas.getContext('2d');
+  ctx2.scale(2, 2);
+  const W = rect.width;
+  const H = rect.height;
+
+  // 清空
+  ctx2.clearRect(0, 0, W, H);
+
+  // 画田字格
+  drawTianZiGe(ctx2, W, H);
+
+  // 先画浅灰色底字
+  const fontSize = Math.min(W, H) * 0.7;
+  ctx2.font = fontSize + 'px "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  ctx2.fillStyle = '#E8ECF0';
+  ctx2.fillText(char, W/2, H/2);
+
+  // 获取笔顺列表
+  const strokes = (strokeOrders[char] || '').split('、').filter(s => s);
+
+  // 逐笔高亮：每次重新绘制，当前笔画用彩色，已写笔画用深色
+  let currentStroke = 0;
+  const stepInfo = document.getElementById('strokeStepInfo');
+
+  function drawStep() {
+    // 重新清空并画底
+    ctx2.clearRect(0, 0, W, H);
+    drawTianZiGe(ctx2, W, H);
+
+    // 画底字（浅灰）
+    ctx2.font = fontSize + 'px "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
+    ctx2.textAlign = 'center';
+    ctx2.textBaseline = 'middle';
+    ctx2.fillStyle = '#E8ECF0';
+    ctx2.fillText(char, W/2, H/2);
+
+    // 画已完成笔画（深色，叠加效果）
+    // 由于Canvas文字无法按笔画拆分，我们用逐笔渐变的方式：
+    // 用 clip + 逐步显示来模拟逐笔效果
+    // 这里采用渐变遮罩方案：每多一笔，就多显示一部分字
+
+    // 计算当前应显示的比例
+    const totalStrokes = strokes.length || 1;
+    const progress = (currentStroke + 1) / totalStrokes;
+
+    // 用裁剪区域逐笔显示：从上到下逐步显现
+    // 更好的方案：每笔用不同颜色画一个小的标记点+序号
+    if (currentStroke > 0) {
+      // 已完成部分用正常颜色
+      ctx2.fillStyle = '#2C3E50';
+      ctx2.fillText(char, W/2, H/2);
+    }
+
+    // 在当前笔画位置画彩色圆点+序号
+    if (currentStroke < strokes.length) {
+      const color = strokeColors[currentStroke % strokeColors.length];
+      // 在字的不同区域标注当前笔画序号
+      const positions = getStrokePositions(char, strokes.length);
+      // 画所有已完成的笔画标记
+      for (let i = 0; i <= currentStroke && i < positions.length; i++) {
+        const pos = positions[i];
+        const c = i === currentStroke ? color : strokeColors[i % strokeColors.length];
+        ctx2.beginPath();
+        ctx2.arc(pos.x * W, pos.y * H, i === currentStroke ? 14 : 10, 0, Math.PI * 2);
+        ctx2.fillStyle = c;
+        ctx2.fill();
+        ctx2.strokeStyle = 'white';
+        ctx2.lineWidth = 2;
+        ctx2.stroke();
+        // 序号
+        ctx2.font = 'bold 14px sans-serif';
+        ctx2.fillStyle = 'white';
+        ctx2.textAlign = 'center';
+        ctx2.textBaseline = 'middle';
+        ctx2.fillText((i + 1).toString(), pos.x * W, pos.y * H);
+      }
+    }
+
+    // 更新信息
+    if (currentStroke < strokes.length) {
+      stepInfo.textContent = `第 ${currentStroke + 1} 笔：${strokes[currentStroke]}`;
+    } else {
+      stepInfo.textContent = `✅ 完成！共 ${strokes.length} 笔`;
+    }
+
+    currentStroke++;
+    if (currentStroke <= strokes.length) {
+      strokeAnimTimer = setTimeout(drawStep, strokeAnimSpeed);
+    }
+  }
+
+  // 开始第一步
+  drawStep();
+}
+
+// 画田字格
+function drawTianZiGe(ctx, W, H) {
+  ctx.strokeStyle = '#D5DBE0';
+  ctx.lineWidth = 1;
+  // 外框
+  ctx.strokeRect(2, 2, W - 4, H - 4);
+  // 虚线十字
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H);
+  ctx.moveTo(0, H/2); ctx.lineTo(W, H/2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+// 获取笔画标记位置（按笔画数量均匀分布在字的不同区域）
+function getStrokePositions(char, total) {
+  // 根据笔画数分配位置，尽量分散在字的各区域
+  // 简化方案：按笔顺从上到下、从左到右排列
+  const positions = [];
+  if (total <= 2) {
+    positions.push({x: 0.35, y: 0.5}, {x: 0.65, y: 0.5});
+  } else if (total <= 4) {
+    positions.push({x: 0.5, y: 0.25}, {x: 0.3, y: 0.5}, {x: 0.7, y: 0.5}, {x: 0.5, y: 0.75});
+  } else if (total <= 6) {
+    positions.push({x: 0.5, y: 0.2}, {x: 0.3, y: 0.4}, {x: 0.7, y: 0.4}, {x: 0.3, y: 0.65}, {x: 0.7, y: 0.65}, {x: 0.5, y: 0.85});
+  } else if (total <= 8) {
+    positions.push({x: 0.5, y: 0.15}, {x: 0.3, y: 0.3}, {x: 0.7, y: 0.3}, {x: 0.5, y: 0.45}, {x: 0.3, y: 0.6}, {x: 0.7, y: 0.6}, {x: 0.5, y: 0.75}, {x: 0.5, y: 0.9});
+  } else {
+    // 多笔画：螺旋分布
+    for (let i = 0; i < total; i++) {
+      const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
+      const r = 0.3;
+      positions.push({x: 0.5 + r * Math.cos(angle), y: 0.5 + r * Math.sin(angle)});
+    }
+  }
+  return positions;
 }
 function renderCharList() {
   const wrap = document.getElementById('writeCharList');
