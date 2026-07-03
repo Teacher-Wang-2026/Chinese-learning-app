@@ -709,27 +709,93 @@ function getCurrentLesson() {
 
 // ==================== 语音功能 ====================
 let availableVoices = [];
+let speechUnlocked = false;
+
 function loadVoices() {
   if ('speechSynthesis' in window) {
     availableVoices = speechSynthesis.getVoices();
   }
 }
+
 if ('speechSynthesis' in window) {
   loadVoices();
-  speechSynthesis.onvoiceschanged = loadVoices;
+  // 某些浏览器需要异步加载
+  if (speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  // 某些浏览器需要轮询
+  setTimeout(loadVoices, 100);
+  setTimeout(loadVoices, 500);
+  setTimeout(loadVoices, 1000);
 }
 
+// iOS 需要先"解锁"语音引擎：在第一次用户交互时播放一个空白的语音
+function unlockSpeech() {
+  if (speechUnlocked || !('speechSynthesis' in window)) return;
+  try {
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    u.rate = 1;
+    speechSynthesis.speak(u);
+    speechUnlocked = true;
+  } catch(e) {}
+}
+
+// 页面加载后监听第一次点击来解锁
+document.addEventListener('click', function unlockOnce() {
+  unlockSpeech();
+  document.removeEventListener('click', unlockOnce);
+}, { once: true });
+
 function speak(text) {
-  if (!('speechSynthesis' in window) || !text) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'zh-CN';
-  u.rate = 0.8;
-  u.pitch = 1;
-  // 优先使用中文语音
-  const zhVoice = availableVoices.find(v => v.lang.startsWith('zh'));
-  if (zhVoice) u.voice = zhVoice;
-  speechSynthesis.speak(u);
+  if (!text) return;
+
+  // 检查是否支持语音合成
+  if (!('speechSynthesis' in window)) {
+    showToast('⚠️ 您的浏览器不支持语音播放');
+    return;
+  }
+
+  try {
+    // 先解锁（iOS）
+    if (!speechUnlocked) unlockSpeech();
+
+    // 停止之前的播放
+    speechSynthesis.cancel();
+
+    // 重新加载语音列表（确保最新）
+    if (availableVoices.length === 0) loadVoices();
+
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.75;
+    u.pitch = 1;
+    u.volume = 1;
+
+    // 优先使用中文语音
+    const zhVoice = availableVoices.find(v => v.lang === 'zh-CN')
+                 || availableVoices.find(v => v.lang === 'zh_CN')
+                 || availableVoices.find(v => v.lang.startsWith('zh'));
+    if (zhVoice) {
+      u.voice = zhVoice;
+    }
+
+    // 播放状态提示
+    u.onstart = function() {};
+    u.onerror = function(e) {
+      console.warn('语音播放失败:', e);
+    };
+
+    speechSynthesis.speak(u);
+
+    // iOS 兼容：如果 paused 状态，恢复
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+    }
+  } catch(e) {
+    console.warn('语音异常:', e);
+    showToast('⚠️ 语音播放失败，请重试');
+  }
 }
 
 function speakWord(text) { speak(text); }
