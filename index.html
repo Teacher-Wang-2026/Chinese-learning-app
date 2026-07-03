@@ -370,16 +370,18 @@ body {
           <div class="flashcard-face flashcard-front">
             <div class="flashcard-char" id="fcChar">中</div>
             <div class="flashcard-pinyin" id="fcPinyin">zhōng</div>
-            <button class="speak-btn" onclick="speakFlashcard(this);return false;" title="点击发音">🔊</button>
             <div class="flashcard-hint">点击翻转查看答案</div>
           </div>
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning" id="fcMeaning">中间、中国</div>
             <div class="flashcard-example" id="fcExample">我在中国的大学学习中文。</div>
-            <button class="speak-btn" onclick="speakFlashcardExample(this);return false;" title="朗读例句">🔊 例句</button>
             <div class="flashcard-hint">你记住了吗？</div>
           </div>
         </div>
+      </div>
+      <div style="padding:0 24px 12px;display:flex;gap:10px;justify-content:center;">
+        <button class="canvas-btn" onclick="speakFlashcard(this)" title="点击发音">🔊 发音</button>
+        <button class="canvas-btn" onclick="speakFlashcardExample(this)" title="朗读例句">🔊 例句</button>
       </div>
       <div class="fc-btns" style="padding:0 24px 20px;">
         <button class="fc-btn wrong" onclick="markCard(false)">😅 还没记住</button>
@@ -708,7 +710,7 @@ function getCurrentLesson() {
 }
 
 // ==================== 语音功能 ====================
-// 使用 Audio 直接播放 TTS 音频URL（audio标签不受CORS限制）
+// 双方案：浏览器内置语音 + 在线TTS
 
 let currentAudio = null;
 
@@ -719,11 +721,9 @@ function speak(text, btnElement) {
   if (currentAudio) {
     try { currentAudio.pause(); } catch(e) {}
   }
-
-  const encoded = encodeURIComponent(text);
-
-  // TTS源：Google翻译（国际通用，埃域能访问）
-  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
+  if ('speechSynthesis' in window) {
+    try { speechSynthesis.cancel(); } catch(e) {}
+  }
 
   // 显示加载提示
   let originalText = '';
@@ -732,25 +732,53 @@ function speak(text, btnElement) {
     btnElement.textContent = '⏳';
   }
 
-  // 创建Audio对象，直接设置src播放
-  // 注意：audio标签加载媒体不受CORS限制（只有fetch/XHR才受限制）
+  const encoded = encodeURIComponent(text);
+
+  // 方案1：先尝试浏览器内置语音（华为鸿蒙可能支持）
+  let nativeWorked = false;
+  if ('speechSynthesis' in window) {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'zh-CN';
+      u.rate = 0.75;
+      u.onstart = function() {
+        nativeWorked = true;
+        if (btnElement) btnElement.textContent = '🔊';
+      };
+      u.onend = function() {
+        if (btnElement) btnElement.textContent = originalText;
+      };
+      u.onerror = function() {
+        // 内置语音失败，尝试在线TTS
+        tryOnlineTTS(text, encoded, btnElement, originalText);
+      };
+      speechSynthesis.speak(u);
+
+      // 500ms后如果内置语音还没开始，自动尝试在线TTS
+      setTimeout(function() {
+        if (!nativeWorked) {
+          tryOnlineTTS(text, encoded, btnElement, originalText);
+        }
+      }, 800);
+      return;
+    } catch(e) {
+      // 内置语音异常，尝试在线TTS
+    }
+  }
+
+  // 方案2：在线TTS
+  tryOnlineTTS(text, encoded, btnElement, originalText);
+}
+
+// 在线TTS播放
+function tryOnlineTTS(text, encoded, btnElement, originalText) {
+  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
+
   currentAudio = new Audio();
   currentAudio.src = ttsUrl;
 
-  // 加载成功后播放
-  currentAudio.addEventListener('canplaythrough', function() {
-    currentAudio.play().then(function() {
-      if (btnElement) btnElement.textContent = originalText;
-    }).catch(function(e) {
-      console.warn('播放被阻止，尝试内置语音:', e);
-      if (btnElement) btnElement.textContent = originalText;
-      speakNative(text);
-    });
-  }, { once: true });
-
-  // 加载失败，尝试百度TTS
   currentAudio.addEventListener('error', function() {
-    console.warn('Google TTS加载失败，尝试百度');
+    // Google失败，尝试百度
     const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
     currentAudio = new Audio(baiduUrl);
     currentAudio.addEventListener('canplaythrough', function() {
@@ -758,35 +786,25 @@ function speak(text, btnElement) {
         if (btnElement) btnElement.textContent = originalText;
       }).catch(function() {
         if (btnElement) btnElement.textContent = originalText;
-        speakNative(text);
+        showToast('⚠️ 语音播放失败，请检查网络');
       });
     }, { once: true });
     currentAudio.addEventListener('error', function() {
       if (btnElement) btnElement.textContent = originalText;
-      speakNative(text);
+      showToast('⚠️ 语音需要联网播放，请检查网络');
     }, { once: true });
     currentAudio.load();
   }, { once: true });
 
-  // 开始加载
-  currentAudio.load();
-}
+  currentAudio.addEventListener('canplaythrough', function() {
+    currentAudio.play().then(function() {
+      if (btnElement) btnElement.textContent = originalText;
+    }).catch(function() {
+      if (btnElement) btnElement.textContent = originalText;
+    });
+  }, { once: true });
 
-// 浏览器内置语音（最后备选）
-function speakNative(text) {
-  if (!('speechSynthesis' in window)) {
-    showToast('⚠️ 语音需要联网才能播放');
-    return;
-  }
-  try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'zh-CN';
-    u.rate = 0.75;
-    speechSynthesis.speak(u);
-  } catch(e) {
-    showToast('⚠️ 语音播放失败');
-  }
+  currentAudio.load();
 }
 
 function stopSpeak() {
