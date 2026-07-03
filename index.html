@@ -370,13 +370,13 @@ body {
           <div class="flashcard-face flashcard-front">
             <div class="flashcard-char" id="fcChar">中</div>
             <div class="flashcard-pinyin" id="fcPinyin">zhōng</div>
-            <button class="speak-btn" onclick="speakFlashcard(this)" title="点击发音">🔊</button>
+            <button class="speak-btn" onclick="speakFlashcard(this);return false;" title="点击发音">🔊</button>
             <div class="flashcard-hint">点击翻转查看答案</div>
           </div>
           <div class="flashcard-face flashcard-back">
             <div class="flashcard-meaning" id="fcMeaning">中间、中国</div>
             <div class="flashcard-example" id="fcExample">我在中国的大学学习中文。</div>
-            <button class="speak-btn" onclick="speakFlashcardExample(this)" title="朗读例句">🔊 例句</button>
+            <button class="speak-btn" onclick="speakFlashcardExample(this);return false;" title="朗读例句">🔊 例句</button>
             <div class="flashcard-hint">你记住了吗？</div>
           </div>
         </div>
@@ -707,8 +707,8 @@ function getCurrentLesson() {
   return lessons.find(l => l.id === currentLessonId);
 }
 
-// ==================== 语音功能（fetch+blob 方案） ====================
-// 先下载音频转成blob URL再播放，绕过跨域限制
+// ==================== 语音功能 ====================
+// 使用 Audio 直接播放 TTS 音频URL（audio标签不受CORS限制）
 
 let currentAudio = null;
 
@@ -718,66 +718,58 @@ function speak(text, btnElement) {
   // 停止之前的播放
   if (currentAudio) {
     try { currentAudio.pause(); } catch(e) {}
-    currentAudio = null;
   }
 
   const encoded = encodeURIComponent(text);
 
-  // 多个TTS源，按优先级尝试
-  const ttsUrls = [
-    `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`,
-    `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`,
-  ];
+  // TTS源：Google翻译（国际通用，埃域能访问）
+  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
   // 显示加载提示
   let originalText = '';
   if (btnElement) {
     originalText = btnElement.textContent;
-    btnElement.textContent = '⏳ 加载中...';
+    btnElement.textContent = '⏳';
   }
 
-  let urlIndex = 0;
+  // 创建Audio对象，直接设置src播放
+  // 注意：audio标签加载媒体不受CORS限制（只有fetch/XHR才受限制）
+  currentAudio = new Audio();
+  currentAudio.src = ttsUrl;
 
-  function tryLoad(url) {
-    fetch(url)
-      .then(function(response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.blob();
-      })
-      .then(function(blob) {
-        const blobUrl = URL.createObjectURL(blob);
-        currentAudio = new Audio(blobUrl);
-        currentAudio.onended = function() {
-          URL.revokeObjectURL(blobUrl);
-          if (btnElement) btnElement.textContent = originalText;
-        };
-        currentAudio.onerror = function() {
-          URL.revokeObjectURL(blobUrl);
-          tryNext();
-        };
-        currentAudio.play().catch(function(e) {
-          console.warn('播放失败:', e);
-          tryNext();
-        });
-        if (btnElement) btnElement.textContent = originalText;
-      })
-      .catch(function(e) {
-        console.warn('下载失败:', e);
-        tryNext();
-      });
-  }
-
-  function tryNext() {
-    urlIndex++;
-    if (urlIndex < ttsUrls.length) {
-      tryLoad(ttsUrls[urlIndex]);
-    } else {
+  // 加载成功后播放
+  currentAudio.addEventListener('canplaythrough', function() {
+    currentAudio.play().then(function() {
+      if (btnElement) btnElement.textContent = originalText;
+    }).catch(function(e) {
+      console.warn('播放被阻止，尝试内置语音:', e);
       if (btnElement) btnElement.textContent = originalText;
       speakNative(text);
-    }
-  }
+    });
+  }, { once: true });
 
-  tryLoad(ttsUrls[0]);
+  // 加载失败，尝试百度TTS
+  currentAudio.addEventListener('error', function() {
+    console.warn('Google TTS加载失败，尝试百度');
+    const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
+    currentAudio = new Audio(baiduUrl);
+    currentAudio.addEventListener('canplaythrough', function() {
+      currentAudio.play().then(function() {
+        if (btnElement) btnElement.textContent = originalText;
+      }).catch(function() {
+        if (btnElement) btnElement.textContent = originalText;
+        speakNative(text);
+      });
+    }, { once: true });
+    currentAudio.addEventListener('error', function() {
+      if (btnElement) btnElement.textContent = originalText;
+      speakNative(text);
+    }, { once: true });
+    currentAudio.load();
+  }, { once: true });
+
+  // 开始加载
+  currentAudio.load();
 }
 
 // 浏览器内置语音（最后备选）
