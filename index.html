@@ -710,106 +710,85 @@ function getCurrentLesson() {
 }
 
 // ==================== 语音功能 ====================
-// 双方案：浏览器内置语音 + 在线TTS
-
-let currentAudio = null;
+// 使用页面内可见的audio播放器，确保所有浏览器都能播放
 
 function speak(text, btnElement) {
   if (!text) return;
 
-  // 停止之前的播放
-  if (currentAudio) {
-    try { currentAudio.pause(); } catch(e) {}
-  }
-  if ('speechSynthesis' in window) {
-    try { speechSynthesis.cancel(); } catch(e) {}
-  }
-
-  // 显示加载提示
-  let originalText = '';
-  if (btnElement) {
-    originalText = btnElement.textContent;
-    btnElement.textContent = '⏳';
-  }
-
   const encoded = encodeURIComponent(text);
 
-  // 方案1：先尝试浏览器内置语音（华为鸿蒙可能支持）
-  let nativeWorked = false;
-  if ('speechSynthesis' in window) {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'zh-CN';
-      u.rate = 0.75;
-      u.onstart = function() {
-        nativeWorked = true;
-        if (btnElement) btnElement.textContent = '🔊';
-      };
-      u.onend = function() {
-        if (btnElement) btnElement.textContent = originalText;
-      };
-      u.onerror = function() {
-        // 内置语音失败，尝试在线TTS
-        tryOnlineTTS(text, encoded, btnElement, originalText);
-      };
-      speechSynthesis.speak(u);
-
-      // 500ms后如果内置语音还没开始，自动尝试在线TTS
-      setTimeout(function() {
-        if (!nativeWorked) {
-          tryOnlineTTS(text, encoded, btnElement, originalText);
-        }
-      }, 800);
-      return;
-    } catch(e) {
-      // 内置语音异常，尝试在线TTS
-    }
+  // 找到或创建播放器容器
+  let playerDiv = document.getElementById('ttsPlayerDiv');
+  if (!playerDiv) {
+    playerDiv = document.createElement('div');
+    playerDiv.id = 'ttsPlayerDiv';
+    playerDiv.style.cssText = 'position:fixed;bottom:70px;left:50%;transform:translateX(-50%);width:90%;max-width:400px;z-index:999;background:white;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.2);padding:12px;display:none;';
+    document.body.appendChild(playerDiv);
   }
 
-  // 方案2：在线TTS
-  tryOnlineTTS(text, encoded, btnElement, originalText);
-}
+  // 停止之前的播放
+  let oldAudio = playerDiv.querySelector('audio');
+  if (oldAudio) { try { oldAudio.pause(); } catch(e) {} }
 
-// 在线TTS播放
-function tryOnlineTTS(text, encoded, btnElement, originalText) {
+  // 显示加载提示
+  if (btnElement) {
+    const originalText = btnElement.textContent;
+    btnElement.textContent = '⏳';
+    setTimeout(function() { btnElement.textContent = originalText; }, 1500);
+  }
+
+  // TTS URL（Google翻译，国际通用）
   const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
 
-  currentAudio = new Audio();
-  currentAudio.src = ttsUrl;
+  // 创建新的audio元素
+  const audio = document.createElement('audio');
+  audio.controls = true;
+  audio.autoplay = true;
+  audio.style.cssText = 'width:100%;';
+  audio.src = ttsUrl;
 
-  currentAudio.addEventListener('error', function() {
-    // Google失败，尝试百度
-    const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
-    currentAudio = new Audio(baiduUrl);
-    currentAudio.addEventListener('canplaythrough', function() {
-      currentAudio.play().then(function() {
-        if (btnElement) btnElement.textContent = originalText;
-      }).catch(function() {
-        if (btnElement) btnElement.textContent = originalText;
-        showToast('⚠️ 语音播放失败，请检查网络');
-      });
-    }, { once: true });
-    currentAudio.addEventListener('error', function() {
-      if (btnElement) btnElement.textContent = originalText;
-      showToast('⚠️ 语音需要联网播放，请检查网络');
-    }, { once: true });
-    currentAudio.load();
-  }, { once: true });
+  // 百度TTS备用
+  const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
 
-  currentAudio.addEventListener('canplaythrough', function() {
-    currentAudio.play().then(function() {
-      if (btnElement) btnElement.textContent = originalText;
-    }).catch(function() {
-      if (btnElement) btnElement.textContent = originalText;
+  audio.addEventListener('error', function() {
+    // Google失败，切换到百度
+    audio.src = baiduUrl;
+    audio.load();
+    audio.play().catch(function() {
+      playerDiv.innerHTML = '<div style="text-align:center;color:#E74C3C;font-size:13px;padding:8px;">⚠️ 语音加载失败，请检查网络</div>';
     });
   }, { once: true });
 
-  currentAudio.load();
+  // 构建播放器内容
+  playerDiv.innerHTML = '';
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'position:absolute;top:4px;right:8px;background:none;border:none;font-size:18px;color:#999;cursor:pointer;';
+  closeBtn.onclick = function() {
+    audio.pause();
+    playerDiv.style.display = 'none';
+  };
+  const label = document.createElement('div');
+  label.textContent = '🔊 ' + text;
+  label.style.cssText = 'font-size:13px;color:#2C3E50;margin-bottom:8px;padding-right:20px;';
+  playerDiv.appendChild(closeBtn);
+  playerDiv.appendChild(label);
+  playerDiv.appendChild(audio);
+  playerDiv.style.display = 'block';
+
+  audio.load();
+  audio.play().catch(function(e) {
+    console.warn('自动播放被阻止，用户需手动点击播放', e);
+  });
 }
 
 function stopSpeak() {
-  if (currentAudio) { try { currentAudio.pause(); } catch(e) {} }
-  if ('speechSynthesis' in window) { try { speechSynthesis.cancel(); } catch(e) {} }
+  const playerDiv = document.getElementById('ttsPlayerDiv');
+  if (playerDiv) {
+    const audio = playerDiv.querySelector('audio');
+    if (audio) { try { audio.pause(); } catch(e) {} }
+    playerDiv.style.display = 'none';
+  }
 }
 
 function speakWord(text, btn) { speak(text, btn); }
@@ -963,9 +942,9 @@ function markCard(remembered) {
   saveData();
   reviewIdx++;
   if (reviewIdx >= reviewList.length) {
-    showCard();
-    if (reviewList.length > 0) showToast('🎉 这一轮复习完毕！');
-    return;
+    // 复习完毕，重置到第一张
+    reviewIdx = 0;
+    showToast('🎉 这一轮复习完毕！从头开始');
   }
   showCard();
 }
@@ -1004,6 +983,7 @@ function nextMC() {
 function checkMC(selected, correct, btn) {
   document.querySelectorAll('#mcOptions .quiz-opt').forEach(o => o.style.pointerEvents = 'none');
   const fb = document.getElementById('mcFeedback');
+  fb.style.removeProperty('display');
   if (selected === correct) {
     btn.classList.add('correct');
     fb.className = 'quiz-feedback correct show';
@@ -1048,6 +1028,7 @@ function checkSpelling() {
   const w = wordBank[spellIdx - 1 >= 0 ? spellIdx - 1 : wordBank.length - 1];
   const input = document.getElementById('spellInput').value.trim();
   const fb = document.getElementById('spellFeedback');
+  fb.style.removeProperty('display');
   totalAttempts++;
   if (input === w.char) {
     fb.className = 'quiz-feedback correct show';
@@ -1075,7 +1056,7 @@ function updateWriteChar() {
   document.getElementById('writeDemoChar').textContent = w.char;
   document.getElementById('writeDemoPinyin').textContent = w.pinyin;
   document.getElementById('writeDemoMeaning').textContent = w.meaning;
-  document.getElementById('strokeOrderInfo').style.display = 'none';
+  document.getElementById('strokeDemoArea').style.display = 'none';
   currentWriteWord = w;
   // 隐藏例句按钮如果没有例句
   const exBtn = document.getElementById('writeSpeakExample');
@@ -1373,6 +1354,8 @@ function checkQuiz(selectedIdx, btn) {
   const q = quizBank[quizIdx];
   document.querySelectorAll('#quizOptions .quiz-opt').forEach(o => o.style.pointerEvents = 'none');
   const fb = document.getElementById('quizFeedback');
+  fb.style.display = 'block';
+  fb.style.removeProperty('display');
   if (selectedIdx === q.answer) {
     btn.classList.add('correct');
     fb.className = 'quiz-feedback correct show';
@@ -1523,7 +1506,6 @@ window.onload = function() {
   initLessons();
   renderLessonSelectors();
   updateStats();
-  initCanvas();
 };
 </script>
 </body>
