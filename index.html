@@ -715,14 +715,62 @@ function getCurrentLesson() {
 }
 
 // ==================== 语音功能 ====================
-// 使用页面内可见的audio播放器，确保所有浏览器都能播放
+// 方案1: Web Speech API (speechSynthesis) — 所有浏览器内置，无需联网
+// 方案2: 在线TTS备用 — Google翻译TTS
+
+let speechUtterance = null;
 
 function speak(text, btnElement) {
   if (!text) return;
 
+  // 先停止之前的语音
+  stopSpeak();
+
+  // 按钮动画
+  if (btnElement) {
+    const orig = btnElement.textContent;
+    btnElement.textContent = '⏳';
+    btnElement.style.opacity = '0.6';
+    setTimeout(function() { btnElement.textContent = orig; btnElement.style.opacity = '1'; }, 1200);
+  }
+
+  // 方案1：优先使用 Web Speech API（所有现代浏览器内置，不需要联网）
+  if (typeof speechSynthesis !== 'undefined') {
+    speechUtterance = new SpeechSynthesisUtterance(text);
+    speechUtterance.lang = 'zh-CN';
+    speechUtterance.rate = 0.8;
+    speechUtterance.pitch = 1;
+    speechUtterance.volume = 1;
+
+    // 等待语音加载完毕
+    speechUtterance.onstart = function() {
+      if (btnElement) { btnElement.textContent = '🔊'; btnElement.style.opacity = '1'; }
+    };
+    speechUtterance.onend = function() {
+      speechUtterance = null;
+    };
+    speechUtterance.onerror = function(e) {
+      console.warn('Web Speech API 失败，尝试备用方案', e);
+      speechUtterance = null;
+      // 降级到在线TTS
+      fallbackTTS(text, btnElement);
+    };
+
+    // 关键：华为浏览器需要先cancel再speak
+    speechSynthesis.cancel();
+    setTimeout(function() {
+      speechSynthesis.speak(speechUtterance);
+    }, 50);
+    return;
+  }
+
+  // 浏览器不支持 Web Speech API，用备用方案
+  fallbackTTS(text, btnElement);
+}
+
+function fallbackTTS(text, btnElement) {
   const encoded = encodeURIComponent(text);
 
-  // 找到或创建播放器容器
   let playerDiv = document.getElementById('ttsPlayerDiv');
   if (!playerDiv) {
     playerDiv = document.createElement('div');
@@ -731,32 +779,18 @@ function speak(text, btnElement) {
     document.body.appendChild(playerDiv);
   }
 
-  // 停止之前的播放
   let oldAudio = playerDiv.querySelector('audio');
   if (oldAudio) { try { oldAudio.pause(); } catch(e) {} }
 
-  // 显示加载提示
-  if (btnElement) {
-    const originalText = btnElement.textContent;
-    btnElement.textContent = '⏳';
-    setTimeout(function() { btnElement.textContent = originalText; }, 1500);
-  }
-
-  // TTS URL（Google翻译，国际通用）
   const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=zh-CN&client=tw-ob&q=${encoded}`;
-
-  // 创建新的audio元素
   const audio = document.createElement('audio');
   audio.controls = true;
   audio.autoplay = true;
   audio.style.cssText = 'width:100%;';
   audio.src = ttsUrl;
 
-  // 百度TTS备用
-  const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
-
   audio.addEventListener('error', function() {
-    // Google失败，切换到百度
+    const baiduUrl = `https://fanyi.baidu.com/gettts?lan=zh&text=${encoded}&spd=3&source=web`;
     audio.src = baiduUrl;
     audio.load();
     audio.play().catch(function() {
@@ -764,7 +798,6 @@ function speak(text, btnElement) {
     });
   }, { once: true });
 
-  // 构建播放器内容
   playerDiv.innerHTML = '';
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '✕';
@@ -783,11 +816,17 @@ function speak(text, btnElement) {
 
   audio.load();
   audio.play().catch(function(e) {
-    console.warn('自动播放被阻止，用户需手动点击播放', e);
+    console.warn('自动播放被阻止', e);
   });
 }
 
 function stopSpeak() {
+  // 停止Web Speech
+  if (speechUtterance) {
+    speechSynthesis.cancel();
+    speechUtterance = null;
+  }
+  // 停止在线播放器
   const playerDiv = document.getElementById('ttsPlayerDiv');
   if (playerDiv) {
     const audio = playerDiv.querySelector('audio');
@@ -1055,7 +1094,8 @@ function initWrite() {
   writeIdx = 0;
   updateWriteChar();
   renderCharList();
-  initCanvas();
+  // 延迟初始化Canvas确保页面已渲染
+  setTimeout(initCanvas, 150);
 }
 function updateWriteChar() {
   const w = wordBank[writeIdx];
@@ -1130,13 +1170,20 @@ function startStrokeAnimation(char) {
   if (strokeAnimTimer) { clearTimeout(strokeAnimTimer); strokeAnimTimer = null; }
 
   const canvas = document.getElementById('strokeDemoCanvas');
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * 2;
-  canvas.height = rect.height * 2;
+  const container = canvas.parentElement;
+  const containerW = container.clientWidth;
+  const containerH = container.clientHeight || containerW; // aspect-ratio:1 兜底
+
+  // 用实际可见尺寸初始化Canvas
+  canvas.width = containerW * 2;
+  canvas.height = containerH * 2;
+  canvas.style.width = containerW + 'px';
+  canvas.style.height = containerH + 'px';
+
   const ctx2 = canvas.getContext('2d');
   ctx2.scale(2, 2);
-  const W = rect.width;
-  const H = rect.height;
+  const W = containerW;
+  const H = containerH;
 
   // 清空
   ctx2.clearRect(0, 0, W, H);
@@ -1286,9 +1333,17 @@ function renderCharList() {
 let canvas, ctx, drawing = false;
 function initCanvas() {
   canvas = document.getElementById('writeCanvas');
-  const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * 2;
-  canvas.height = rect.width * 2;
+  const parent = canvas.parentElement;
+  const w = parent.clientWidth;
+  if (w <= 0) {
+    // 页面尚未完全渲染，延迟重试
+    setTimeout(initCanvas, 100);
+    return;
+  }
+  canvas.width = w * 2;
+  canvas.height = w * 2;
+  canvas.style.width = w + 'px';
+  canvas.style.height = w + 'px';
   ctx = canvas.getContext('2d');
   ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#2C3E50';
   canvas.onmousedown = (e) => { drawing = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
