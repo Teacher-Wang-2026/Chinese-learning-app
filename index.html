@@ -1248,15 +1248,18 @@ function renderCharList() {
 
 // Canvas
 let canvas, ctx, drawing = false;
+let canvasBgDrawn = false;
+let canvasSize = 0;
+
 function initCanvas() {
   canvas = document.getElementById('writeCanvas');
   const parent = canvas.parentElement;
   const w = parent.clientWidth;
   if (w <= 0) {
-    // 页面尚未完全渲染，延迟重试
     setTimeout(initCanvas, 100);
     return;
   }
+  canvasSize = w;
   canvas.width = w * 2;
   canvas.height = w * 2;
   canvas.style.width = w + 'px';
@@ -1270,33 +1273,90 @@ function initCanvas() {
   canvas.ontouchstart = (e) => { e.preventDefault(); drawing = true; const p = getTouchPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
   canvas.ontouchmove = (e) => { e.preventDefault(); if (!drawing) return; const p = getTouchPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
   canvas.ontouchend = () => drawing = false;
+  // 画底字
+  drawBackgroundChar();
 }
 function getPos(e) { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * 2, y: (e.clientY - r.top) * 2 }; }
 function getTouchPos(e) { const r = canvas.getBoundingClientRect(); const t = e.touches[0]; return { x: (t.clientX - r.left) * 2, y: (t.clientY - r.top) * 2 }; }
+
+function drawBackgroundChar() {
+  if (!ctx || !canvas) return;
+  const w = wordBank[writeIdx];
+  if (!w || !w.char) return;
+  // 保存当前canvas内容
+  const saved = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  // 画田字格
+  drawTianZiGeOnCtx(ctx, canvas.width, canvas.height);
+  // 画浅色描红底字
+  const fontSize = canvasSize * 2 * 0.55;
+  ctx.font = fontSize + 'px "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(180,190,200,0.35)';
+  ctx.fillText(w.char, canvasSize, canvasSize);
+  // 恢复之前的笔迹
+  ctx.putImageData(saved, 0, 0);
+  canvasBgDrawn = true;
+}
+
+function drawTianZiGeOnCtx(c, W, H) {
+  c.strokeStyle = '#D5DBE0';
+  c.lineWidth = 1;
+  c.strokeRect(2, 2, W - 4, H - 4);
+  c.setLineDash([6, 4]);
+  c.beginPath();
+  c.moveTo(W/2, 0); c.lineTo(W/2, H);
+  c.moveTo(0, H/2); c.lineTo(W, H/2);
+  c.stroke();
+  c.setLineDash([]);
+}
+
 function clearCanvas() {
-  if (!ctx) return;
+  if (!ctx || !canvas) return;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   document.getElementById('writeResult').style.display = 'none';
+  // 重新画底字
+  drawBackgroundChar();
 }
+
 function checkWriting() {
   const w = wordBank[writeIdx];
   if (!w) return;
   const res = document.getElementById('writeResult');
   res.style.display = 'block';
+
+  // 读取当前画布像素
   const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  let pixelCount = 0;
-  for (let i = 3; i < imgData.data.length; i += 4) { if (imgData.data[i] > 0) pixelCount++; }
-  if (pixelCount < 100) {
-    res.innerHTML = `✏️ 还没写字哦！请在田字格里练习写「${w.char}」<br>💡 点击「笔顺提示」查看正确笔顺。`;
+  const pixels = imgData.data;
+
+  // 统计有笔迹的像素数（非白色/非透明）
+  let inkPixels = 0;
+  let totalPixels = pixels.length / 4;
+  for (let i = 3; i < pixels.length; i += 4) {
+    // alpha > 0 且不是纯背景色（浅灰底字的像素）
+    if (pixels[i] > 20) {
+      // 检查是否为深色笔迹（非浅色底字）
+      const r = pixels[i-3], g = pixels[i-2], b = pixels[i-1];
+      // 深色笔迹：RGB 都小于 200
+      if (r < 200 || g < 200 || b < 200) {
+        inkPixels++;
+      }
+    }
+  }
+
+  const coverage = inkPixels / totalPixels;
+
+  if (coverage < 0.003) {
+    res.innerHTML = `✏️ 还没写字哦！请在田字格里照着描红写「${w.char}」<br>💡 灰色底字是你的参考。`;
     res.style.color = 'var(--accent)';
+  } else if (coverage < 0.02) {
+    res.innerHTML = `📝 写了一点，继续练习「${w.char}」！<br>💡 尽量覆盖灰色底字，描得越完整越好。`;
+    res.style.color = '#E67E22';
+  } else if (coverage < 0.06) {
+    res.innerHTML = `👍 不错！「${w.char}」写了大半<br>💡 再描一遍，注意覆盖所有笔画。`;
+    res.style.color = '#27AE60';
   } else {
-    const tips = [
-      `👍 不错！继续练习「${w.char}」！`,
-      `✅ 写得很好！再写一遍「${w.char}」试试！`,
-      `💪 很棒！注意笔顺哦，点击「笔顺提示」对照一下。`,
-      `🌟 继续加油！「${w.char}」一共 ${w.char.length} 个字，都要练习。`
-    ];
-    res.innerHTML = `${tips[Math.floor(Math.random() * tips.length)]}<br>💡 写完后点「清除」可以重新练习。`;
+    res.innerHTML = `🌟 太棒了！「${w.char}」写得很好！<br>💡 点击「下一个」继续练习。`;
     res.style.color = '#27AE60';
   }
 }
