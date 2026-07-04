@@ -1095,7 +1095,7 @@ function initWrite() {
   setTimeout(function() {
     initCanvas();
     if (wordBank[writeIdx]) initHanziWriter(wordBank[writeIdx].char);
-  }, 200);
+  }, 800);
 }
 function updateWriteChar() {
   const w = wordBank[writeIdx];
@@ -1285,23 +1285,34 @@ function drawBackgroundChar() {
   if (!w || !w.char) return;
   // 保存当前笔迹
   const saved = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  // 画田字格
-  drawTianZiGeOnCtx(ctx, canvas.width, canvas.height);
-  // 画浅色描红底字（在笔迹下面，所以先恢复笔迹再画？不，底字应该在底层）
-  // 正确做法：清空 → 画底字 → 画田字格 → 恢复笔迹
+  // 清空 → 画底字 → 画田字格 → 恢复笔迹
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // 画浅色底字
-  const fontSize = canvasSize * 2 * 0.55;
+  // 画描红底字（用更深的灰色确保手机可见）
+  const fontSize = Math.round(canvasSize * 2 * 0.5);
   ctx.font = fontSize + 'px "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = 'rgba(180,190,200,0.35)';
+  ctx.fillStyle = 'rgba(160, 172, 184, 0.55)';
   ctx.fillText(w.char, canvasSize, canvasSize);
+  // 再描一遍边，增加可见度
+  ctx.strokeStyle = 'rgba(140, 150, 162, 0.45)';
+  ctx.lineWidth = 1;
+  ctx.strokeText(w.char, canvasSize, canvasSize);
   // 画田字格
   drawTianZiGeOnCtx(ctx, canvas.width, canvas.height);
   // 恢复笔迹（在底字上面）
   ctx.putImageData(saved, 0, 0);
   canvasBgDrawn = true;
+
+  // 保险：如果画布仍是空白（字体未加载等原因），200ms后重试
+  const test = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  let nonWhite = 0;
+  for (let i = 3; i < test.data.length; i += 4) {
+    if (test.data[i] > 30) nonWhite++;
+  }
+  if (nonWhite < 50) {
+    setTimeout(drawBackgroundChar, 300);
+  }
 }
 
 function drawTianZiGeOnCtx(c, W, H) {
