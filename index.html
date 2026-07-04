@@ -436,8 +436,10 @@ body {
       </div>
 
       <!-- hanzi-writer 描红演示区 -->
-      <div style="position:relative;width:100%;max-width:320px;margin:0 auto 16px;aspect-ratio:1;background:#FAFCFF;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;">
-        <div id="hanziWriterTarget" style="width:100%;height:100%;"></div>
+      <div style="position:relative;width:100%;max-width:320px;margin:0 auto 16px;">
+        <div style="width:100%;padding-top:100%;position:relative;background:#FAFCFF;border:2px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+          <div id="hanziWriterTarget" style="position:absolute;top:0;left:0;width:100%;height:100%;"></div>
+        </div>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
         <button class="canvas-btn" onclick="toggleStrokeSpeed()" id="speedBtn">⚡ 速度: 正常</button>
@@ -1138,46 +1140,69 @@ function showStrokeOrder() {
 // ==================== 笔顺描红（hanzi-writer） ====================
 let hanziWriter = null;
 let strokeSpeed = 1;
+let hanziWriterReady = false;
 
 function initHanziWriter(char) {
   const target = document.getElementById('hanziWriterTarget');
-  target.innerHTML = ''; // 清除旧内容
+  if (!target) return;
+
+  target.innerHTML = '';
 
   if (typeof HanziWriter === 'undefined') {
     target.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;font-size:14px;">⏳ 加载笔顺库中...</div>';
-    // hanzi-writer CDN加载失败，回退
     setTimeout(function() {
-      if (typeof HanziWriter === 'undefined') {
-        target.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E74C3C;font-size:14px;">⚠️ 笔顺库加载失败<br>请检查网络后刷新页面</div>';
-      } else {
+      if (typeof HanziWriter !== 'undefined') {
         initHanziWriter(char);
+      } else {
+        target.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E74C3C;font-size:14px;">⚠️ 笔顺库加载失败<br>请检查网络后刷新页面</div>';
       }
     }, 3000);
     return;
   }
 
+  // 确保容器有尺寸
+  const containerW = target.clientWidth;
+  if (containerW <= 0) {
+    // 容器还没渲染，延迟重试
+    setTimeout(function() { initHanziWriter(char); }, 200);
+    return;
+  }
+
   try {
-    const w = target.clientWidth || 300;
+    // 销毁旧实例
+    if (hanziWriter) {
+      try { hanziWriter.cancelAnimation(); } catch(e) {}
+      hanziWriter = null;
+    }
+
     hanziWriter = HanziWriter.create('hanziWriterTarget', char, {
-      width: w,
-      height: w,
-      padding: 15,
+      width: containerW,
+      height: containerW,
+      padding: 20,
       showOutline: true,
-      showCharacter: false,
+      showCharacter: true,
       strokeAnimationSpeed: strokeSpeed,
-      delayBetweenStrokes: 100,
+      delayBetweenStrokes: 80,
       strokeColor: '#E74C3C',
       radicalColor: '#4A90D9',
-      outlineColor: '#D5DBE0',
+      outlineColor: '#CCC',
       drawingColor: '#2C3E50',
     });
 
-    // 自动播放一遍
-    hanziWriter.animateCharacter();
+    hanziWriterReady = true;
 
-    // 更新笔画信息
-    hanziWriter._renderState.characterData.strokes.length;
-    document.getElementById('strokeStepInfo').textContent = '共 ' + hanziWriter._data.strokes.length + ' 笔';
+    // 等待数据加载完成后播放
+    hanziWriter._withData(function(data) {
+      document.getElementById('strokeStepInfo').textContent = '共 ' + data.strokes.length + ' 笔';
+    });
+
+    // 稍等一帧再播放动画
+    setTimeout(function() {
+      if (hanziWriter) {
+        hanziWriter.animateCharacter();
+      }
+    }, 300);
+
   } catch(e) {
     console.warn('hanzi-writer 初始化失败:', e);
     target.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#E74C3C;font-size:14px;">⚠️ 该字暂无笔顺数据</div>';
