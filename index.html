@@ -534,6 +534,7 @@ body {
         </table>
       </div>
       <button class="canvas-btn" style="width:100%;" onclick="exportWords()">📤 导出当前课词库</button>
+      <button class="canvas-btn" style="width:100%;margin-top:8px;background:#E74C3C;color:#fff;" onclick="resetAllData()">🔄 恢复默认数据（清除所有修改）</button>
     </div>
   </div>
 
@@ -696,6 +697,10 @@ function initLessons() {
     lessons = JSON.parse(JSON.stringify(DEFAULT_LESSONS));
     currentLessonId = 1;
     saveData();
+  }
+  // 确保当前课程ID有效，修复旧数据可能的问题
+  if (!lessons.find(l => l.id === currentLessonId)) {
+    currentLessonId = lessons[0] ? lessons[0].id : 1;
   }
   refreshWordBank();
 }
@@ -899,6 +904,7 @@ function updateStats() {
 
 // ==================== 单词复习 ====================
 function initReview() {
+  refreshWordBank(); // 确保wordBank与当前课同步
   reviewList = [...wordBank];
   shuffle(reviewList);
   reviewIdx = 0;
@@ -1045,6 +1051,7 @@ function checkSpelling() {
 
 // ==================== 汉字书写 ====================
 function initWrite() {
+  refreshWordBank(); // 确保wordBank与当前课同步
   writeIdx = 0;
   updateWriteChar();
   renderCharList();
@@ -1490,6 +1497,23 @@ function exportWords() {
     document.execCommand('copy'); document.body.removeChild(ta);
     showToast('✅ 词库已复制到剪贴板！');
   });
+}
+
+function resetAllData() {
+  if (confirm('确定要恢复默认数据吗？这将清除所有你添加的课程和词汇！')) {
+    localStorage.removeItem('chineseLearningApp');
+    lessons = JSON.parse(JSON.stringify(DEFAULT_LESSONS));
+    currentLessonId = 1;
+    todayReviewed = 0;
+    totalCorrect = 0;
+    totalAttempts = 0;
+    refreshWordBank();
+    saveData();
+    renderLessonSelectors();
+    renderWordTable();
+    updateStats();
+    showToast('✅ 已恢复默认数据！');
+  }
 }
 
 // ==================== Toast ====================
