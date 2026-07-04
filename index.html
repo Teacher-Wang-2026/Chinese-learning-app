@@ -1283,18 +1283,23 @@ function drawBackgroundChar() {
   if (!ctx || !canvas) return;
   const w = wordBank[writeIdx];
   if (!w || !w.char) return;
-  // 保存当前canvas内容
+  // 保存当前笔迹
   const saved = ctx.getImageData(0, 0, canvas.width, canvas.height);
   // 画田字格
   drawTianZiGeOnCtx(ctx, canvas.width, canvas.height);
-  // 画浅色描红底字
+  // 画浅色描红底字（在笔迹下面，所以先恢复笔迹再画？不，底字应该在底层）
+  // 正确做法：清空 → 画底字 → 画田字格 → 恢复笔迹
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // 画浅色底字
   const fontSize = canvasSize * 2 * 0.55;
   ctx.font = fontSize + 'px "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = 'rgba(180,190,200,0.35)';
   ctx.fillText(w.char, canvasSize, canvasSize);
-  // 恢复之前的笔迹
+  // 画田字格
+  drawTianZiGeOnCtx(ctx, canvas.width, canvas.height);
+  // 恢复笔迹（在底字上面）
   ctx.putImageData(saved, 0, 0);
   canvasBgDrawn = true;
 }
