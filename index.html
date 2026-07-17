@@ -449,8 +449,8 @@ body {
 
     <div class="card">
       <div class="card-title">📥 批量导入词汇到当前课</div>
-      <textarea class="import-area" id="importArea" placeholder="每行一个词，用逗号分隔&#10;格式：汉字,拼音,词性,释义,例句（词性和例句可选）&#10;&#10;例子：&#10;中国,zhōng guó,名词,China,我在中国学习。&#10;学习,xué xí,动词,study,我要学习中文。&#10;学生,xué sheng,名词,student"></textarea>
-      <div class="import-hint">💡 每行一个词，用英文逗号或中文逗号分隔。汉字、拼音、释义必填，词性和例句可选。导入到当前选中的课程。</div>
+      <textarea class="import-area" id="importArea" placeholder="每行一个词，用逗号分隔&#10;格式：汉字,拼音,词性,释义,例句（词性和例句可选）&#10;&#10;例子：&#10;中国,zhōng guó,n.,中国 / China,我在中国学习。&#10;学习,xué xí,v.,学习 / study,我要学习中文。&#10;学生,xué sheng,n.,学生 / student"></textarea>
+      <div class="import-hint">💡 每行一个词，用英文逗号或中文逗号分隔。汉字、拼音、释义必填，词性（n. v. adj.等）和例句可选。导入到当前选中的课程。</div>
       <button class="add-word-btn" onclick="importWords()" style="border-radius:10px;">导入词汇</button>
     </div>
 
@@ -460,19 +460,18 @@ body {
         <input class="add-word-input" id="addChar" placeholder="汉字（如：学习）">
         <input class="add-word-input" id="addPinyin" placeholder="拼音（如：xué xí）">
         <select class="add-word-input" id="addPos">
-          <option value="">词性（可选）</option>
-          <option value="名词">名词</option>
-          <option value="动词">动词</option>
-          <option value="形容词">形容词</option>
-          <option value="副词">副词</option>
-          <option value="代词">代词</option>
-          <option value="介词">介词</option>
-          <option value="连词">连词</option>
-          <option value="量词">量词</option>
-          <option value="助词">助词</option>
-          <option value="叹词">叹词</option>
-          <option value="感叹词">感叹词</option>
-          <option value="数词">数词</option>
+          <option value="">POS（可选）</option>
+          <option value="n.">n. 名词</option>
+          <option value="v.">v. 动词</option>
+          <option value="adj.">adj. 形容词</option>
+          <option value="adv.">adv. 副词</option>
+          <option value="pron.">pron. 代词</option>
+          <option value="prep.">prep. 介词</option>
+          <option value="conj.">conj. 连词</option>
+          <option value="num.">num. 数词</option>
+          <option value="mw.">mw. 量词</option>
+          <option value="part.">part. 助词</option>
+          <option value="interj.">interj. 叹词</option>
         </select>
         <input class="add-word-input" id="addMeaning" placeholder="释义（如：study）">
         <input class="add-word-input" id="addExample" placeholder="例句（可选）" style="grid-column:1/-1;">
@@ -512,42 +511,42 @@ const DEFAULT_LESSONS = [
   {
     id: 1, name: "第1课：称谓与身份",
     words: [
-      {char:"我", pinyin:"wǒ", meaning:"我、I", pos:"代词", example:"我是学生。"},
-      {char:"你", pinyin:"nǐ", meaning:"你、you", pos:"代词", example:"你好！"},
-      {char:"他", pinyin:"tā", meaning:"他、he", pos:"代词", example:"他是老师。"},
-      {char:"老师", pinyin:"lǎo shī", meaning:"老师、teacher", pos:"名词", example:"王老师是我的中文老师。"},
-      {char:"学生", pinyin:"xué sheng", meaning:"学生、student", pos:"名词", example:"我是学生。"},
+      {char:"我", pinyin:"wǒ", pos:"pron.", meaning:"我 / I, me", example:"我是学生。"},
+      {char:"你", pinyin:"nǐ", pos:"pron.", meaning:"你 / you", example:"你好！"},
+      {char:"他", pinyin:"tā", pos:"pron.", meaning:"他 / he, him", example:"他是老师。"},
+      {char:"老师", pinyin:"lǎo shī", pos:"n.", meaning:"老师 / teacher", example:"王老师是我的中文老师。"},
+      {char:"学生", pinyin:"xué sheng", pos:"n.", meaning:"学生 / student", example:"我是学生。"},
     ]
   },
   {
     id: 2, name: "第2课：日常交际",
     words: [
-      {char:"你好", pinyin:"nǐ hǎo", meaning:"你好、hello", pos:"感叹词", example:"你好，很高兴认识你！"},
-      {char:"谢谢", pinyin:"xiè xie", meaning:"谢谢、thank you", pos:"动词", example:"谢谢你！"},
-      {char:"再见", pinyin:"zài jiàn", meaning:"再见、goodbye", pos:"动词", example:"明天见，再见！"},
-      {char:"请", pinyin:"qǐng", meaning:"请、please", pos:"动词", example:"请进！"},
-      {char:"对不起", pinyin:"duì bu qǐ", meaning:"对不起、sorry", pos:"动词", example:"对不起，我迟到了。"},
+      {char:"你好", pinyin:"nǐ hǎo", pos:"interj.", meaning:"你好 / hello", example:"你好，很高兴认识你！"},
+      {char:"谢谢", pinyin:"xiè xie", pos:"v.", meaning:"谢谢 / thank you", example:"谢谢你！"},
+      {char:"再见", pinyin:"zài jiàn", pos:"v.", meaning:"再见 / goodbye", example:"明天见，再见！"},
+      {char:"请", pinyin:"qǐng", pos:"v.", meaning:"请 / please", example:"请进！"},
+      {char:"对不起", pinyin:"duì bu qǐ", pos:"v.", meaning:"对不起 / sorry", example:"对不起，我迟到了。"},
     ]
   },
   {
     id: 3, name: "第3课：饮食生活",
     words: [
-      {char:"吃饭", pinyin:"chī fàn", meaning:"吃饭、eat", pos:"动词", example:"我们一起吃饭吧。"},
-      {char:"喝水", pinyin:"hē shuǐ", meaning:"喝水、drink", pos:"动词", example:"请喝水。"},
-      {char:"买", pinyin:"mǎi", meaning:"买、buy", pos:"动词", example:"我去买东西。"},
-      {char:"东西", pinyin:"dōng xi", meaning:"东西、thing", pos:"名词", example:"这个东西多少钱？"},
-      {char:"钱", pinyin:"qián", meaning:"钱、money", pos:"名词", example:"我没有钱。"},
+      {char:"吃饭", pinyin:"chī fàn", pos:"v.", meaning:"吃饭 / eat, have a meal", example:"我们一起吃饭吧。"},
+      {char:"喝水", pinyin:"hē shuǐ", pos:"v.", meaning:"喝水 / drink water", example:"请喝水。"},
+      {char:"买", pinyin:"mǎi", pos:"v.", meaning:"买 / buy", example:"我去买东西。"},
+      {char:"东西", pinyin:"dōng xi", pos:"n.", meaning:"东西 / thing", example:"这个东西多少钱？"},
+      {char:"钱", pinyin:"qián", pos:"n.", meaning:"钱 / money", example:"我没有钱。"},
     ]
   },
   {
     id: 4, name: "第4课：常用动作",
     words: [
-      {char:"学习", pinyin:"xué xí", meaning:"学习、study", pos:"动词", example:"我要学习中文。"},
-      {char:"看", pinyin:"kàn", meaning:"看、look", pos:"动词", example:"我看电影。"},
-      {char:"去", pinyin:"qù", meaning:"去、go", pos:"动词", example:"我去中国。"},
-      {char:"在", pinyin:"zài", meaning:"在、at", pos:"介词", example:"我在家。"},
-      {char:"有", pinyin:"yǒu", meaning:"有、have", pos:"动词", example:"我有一个朋友。"},
-      {char:"是", pinyin:"shì", meaning:"是、to be", pos:"动词", example:"我是美国人。"},
+      {char:"学习", pinyin:"xué xí", pos:"v.", meaning:"学习 / study, learn", example:"我要学习中文。"},
+      {char:"看", pinyin:"kàn", pos:"v.", meaning:"看 / look, watch, read", example:"我看电影。"},
+      {char:"去", pinyin:"qù", pos:"v.", meaning:"去 / go", example:"我去中国。"},
+      {char:"在", pinyin:"zài", pos:"prep.", meaning:"在 / at, in, on", example:"我在家。"},
+      {char:"有", pinyin:"yǒu", pos:"v.", meaning:"有 / have", example:"我有一个朋友。"},
+      {char:"是", pinyin:"shì", pos:"v.", meaning:"是 / to be", example:"我是美国人。"},
     ]
   },
 ];
@@ -1213,8 +1212,8 @@ function importWords() {
   const lines = text.split('\n');
   let count = 0;
   let failCount = 0;
-  // 常见词性列表，用于判断第3项是词性还是释义
-  const posList = ['名词','动词','形容词','副词','代词','介词','连词','量词','助词','叹词','感叹词','数词','叹词','助动词','能愿动词','方位词','时间词','处所词'];
+  // 常见词性英文缩写，用于判断第3项是词性还是释义
+  const posList = ['n.','v.','adj.','adv.','pron.','prep.','conj.','num.','mw.','part.','interj.'];
   lines.forEach(line => {
     line = line.trim();
     if (!line) return;
